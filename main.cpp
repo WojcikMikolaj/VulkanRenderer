@@ -1,8 +1,8 @@
-#include "HelloTriangleApplication.h"
+#include "Wrapper/Wrapper.h"
 
 int main()
 {
-    HelloTriangleApplication app;
+    Wrapper app;
 
     try
     {

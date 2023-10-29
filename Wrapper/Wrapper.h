@@ -1,8 +1,15 @@
-﻿#pragma once
+//
+// Created by Mikołaj Wójcik on 29.10.2023.
+//
+
+#ifndef VULKANRENDERER_WRAPPER_H
+#define VULKANRENDERER_WRAPPER_H
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <cstdlib>
 #include <fstream>
@@ -16,18 +23,20 @@
 
 #include <chrono>
 #include <array>
+#include "Debug/ValidationLayers.h"
+#include "HelperStructs/UniformBufferObjectStructs/UniformBufferObjects.h"
+#include "HelperStructs/VertexStructs/Vertices.h"
+#include "HelperStructs/QueueFamilyIndices.h"
+#include "HelperStructs/SwapChainSupportDetails.h"
+#include "Instance.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<const char*> validationLayers = {
-    "VK_LAYER_KHRONOS_validation"
-};
-
 const std::vector<const char*> deviceExtensions ={
-  VK_KHR_SWAPCHAIN_EXTENSION_NAME  
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
 #ifdef NDEBUG
@@ -36,100 +45,43 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-struct QueueFamilyIndices
-{
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete()
-    {
-        return graphicsFamily.has_value()
-            && presentFamily.has_value();
-    }
-};
-
-struct SwapChainSupportDetails
-{
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
 const std::vector<VkDynamicState> dynamicStates = {
-    VK_DYNAMIC_STATE_VIEWPORT,
-    VK_DYNAMIC_STATE_SCISSOR
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
 };
 
-struct Vertex {
-    glm::dvec2 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-    
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-        
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-        
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R64G64_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 2;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-        
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 3;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-        return attributeDescriptions;
-    }
-};
-
-const std::vector<Vertex> vertices = {
-    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
-    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
-    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
+const std::vector<Vertex_dpos2_col3_tex2> vertices = {
+        {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
-    0, 1, 2, 2, 3, 0
+        0, 1, 2, 2, 3, 0
 };
 
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
 
-class HelloTriangleApplication
+class Wrapper
 {
 public:
-    void run()
-    {
+    void run() {
         initWindow();
         initVulkan();
         mainLoop();
         cleanup();
     }
-    bool framebufferResized = false;
 
+    bool framebufferResized = false;
 private:
+    std::unique_ptr<ValidationLayers> pValidationLayers;
+    std::unique_ptr<AppInfo> pAppInfo;
+    std::unique_ptr<Instance> pInstance;
+
     uint32_t currentFrame = 0;
-    
+
     GLFWwindow* window;
-    VkInstance instance;
+
     VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
@@ -151,12 +103,12 @@ private:
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
-    
+
     VkBuffer vertexBuffer;
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
-    
+
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
@@ -169,7 +121,7 @@ private:
 
     VkImageView textureImageView;
     VkSampler textureSampler;
-    
+
     void initWindow();
 
     void createDescriptorPool();
@@ -187,22 +139,21 @@ private:
     void createInstance();
 
     void mainLoop();
-    
+
     void drawFrame();
-    
+
     void updateUniformBuffer(uint32_t uint32);
-    
+
     void cleanup();
 
-    bool checkValidationLayerSupport();
 
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-    void checkExtensions(const char** extensionsToCheck, uint32_t extensionsToCheckCount);
 
-    std::vector<const char*> getRequiredExtensions();
+
+
 
     void pickPhysicalDevice();
-    
+
     int rateDeviceSuitability(VkPhysicalDevice device);
 
     bool isDeviceSuitable(VkPhysicalDevice device);
@@ -258,21 +209,13 @@ private:
 
     void setupDebugMessenger();
 
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData);
-
     static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
                                                  const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
                                                  const VkAllocationCallbacks* pAllocator,
                                                  VkDebugUtilsMessengerEXT* pDebugMessenger)
     {
         auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            instance, "vkCreateDebugUtilsMessengerEXT");
+                instance, "vkCreateDebugUtilsMessengerEXT");
         if (nullptr != func)
         {
             return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -287,7 +230,7 @@ private:
                                               const VkAllocationCallbacks* pAllocator)
     {
         auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            instance, "vkDestroyDebugUtilsMessengerEXT");
+                instance, "vkDestroyDebugUtilsMessengerEXT");
         if (nullptr != func)
         {
             func(instance, debugMessenger, pAllocator);
@@ -328,3 +271,4 @@ private:
         return shaderModule;
     }
 };
+#endif //VULKANRENDERER_WRAPPER_H
