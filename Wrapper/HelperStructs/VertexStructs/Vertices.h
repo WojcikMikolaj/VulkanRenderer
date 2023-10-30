@@ -6,7 +6,7 @@
 #define VULKANRENDERER_VERTICES_H
 
 struct Vertex_dpos2_col3_tex2 {
-    glm::dvec2 pos;
+    glm::vec2 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
 
@@ -24,7 +24,7 @@ struct Vertex_dpos2_col3_tex2 {
 
         attributeDescriptions[0].binding = 0;
         attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R64G64_SFLOAT;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
         attributeDescriptions[0].offset = offsetof(Vertex_dpos2_col3_tex2, pos);
 
         attributeDescriptions[1].binding = 0;

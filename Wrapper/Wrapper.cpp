@@ -268,9 +268,10 @@ int Wrapper::rateDeviceSuitability(VkPhysicalDevice device)
     if (!indices.isComplete()
         || !checkDeviceExtensionSupport(device)
         || !checkSwapChainAdequate(device)
-        || !deviceFeatures.geometryShader
+       // || !deviceFeatures.geometryShader
         || !deviceFeatures.tessellationShader
-        || !deviceFeatures.samplerAnisotropy)
+        || !deviceFeatures.samplerAnisotropy
+       )
     {
         std::cout << "Device: " << deviceProperties.deviceName << " Score: " << "0" << std::endl;
         return 0;
@@ -422,6 +423,7 @@ void Wrapper::createLogicalDevice()
 
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
+    //deviceFeatures.shaderFloat64 = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;

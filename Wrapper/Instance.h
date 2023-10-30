@@ -63,6 +63,10 @@ public:
             createInfo.pNext = nullptr;
         }
 
+#if __APPLE__
+        createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+
         if (VK_SUCCESS != vkCreateInstance(&createInfo, nullptr, &instance))
         {
             throw std::runtime_error("Failed to create instance!");

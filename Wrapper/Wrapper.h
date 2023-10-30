@@ -36,7 +36,10 @@ const uint32_t HEIGHT = 600;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 const std::vector<const char*> deviceExtensions ={
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#if __APPLE__
+        "VK_KHR_portability_subset",
+#endif
 };
 
 #ifdef NDEBUG
@@ -241,7 +244,7 @@ private:
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
-            throw std::runtime_error("failed to open file!");
+            throw std::runtime_error("failed to open file: " + filename + "!");
         }
 
         size_t fileSize = (size_t) file.tellg();

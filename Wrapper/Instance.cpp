@@ -58,6 +58,11 @@ std::vector<const char*> Instance::getRequiredExtensions(std::unique_ptr<Validat
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
 
+#if __APPLE__
+    extensions.push_back("VK_KHR_get_physical_device_properties2");
+    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+#endif
+
     return extensions;
 }
 
