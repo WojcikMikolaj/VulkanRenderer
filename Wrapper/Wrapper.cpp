@@ -59,7 +59,7 @@ void Wrapper::createInstance()
 {
     pValidationLayers = std::make_unique<ValidationLayers>(enableValidationLayers);
     pAppInfo = std::make_unique<AppInfo>("Test", "None");
-    pInstance = std::make_unique<Instance>(pAppInfo, pValidationLayers);
+    pInstance = std::make_shared<Instance>(pAppInfo, pValidationLayers);
 }
 
 void Wrapper::mainLoop()
@@ -203,7 +203,7 @@ void Wrapper::cleanup()
 
     if (enableValidationLayers)
     {
-        DebugMessenger::DestroyDebugUtilsMessengerEXT(pInstance, pDebugMessenger, nullptr);
+        pDebugMessenger.reset();
     }
 
     vkDestroySurfaceKHR(pInstance->instance, surface, nullptr);
@@ -1432,7 +1432,7 @@ void Wrapper::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 void Wrapper::setupDebugMessenger()
 {
-    pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers);
+    pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers, nullptr);
 }
 
 

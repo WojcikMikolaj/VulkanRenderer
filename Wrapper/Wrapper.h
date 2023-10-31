@@ -80,7 +80,7 @@ public:
 private:
     std::unique_ptr<ValidationLayers> pValidationLayers;
     std::unique_ptr<AppInfo> pAppInfo;
-    std::unique_ptr<Instance> pInstance;
+    std::shared_ptr<Instance> pInstance;
 
     uint32_t currentFrame = 0;
 
