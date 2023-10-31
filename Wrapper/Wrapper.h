@@ -29,6 +29,7 @@
 #include "HelperStructs/QueueFamilyIndices.h"
 #include "HelperStructs/SwapChainSupportDetails.h"
 #include "Instance.h"
+#include "Debug/DebugMessenger.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -85,7 +86,7 @@ private:
 
     GLFWwindow* window;
 
-    VkDebugUtilsMessengerEXT debugMessenger;
+    std::unique_ptr<DebugMessenger> pDebugMessenger;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     VkQueue graphicsQueue;
@@ -211,34 +212,6 @@ private:
     VkCommandBuffer beginSingleTimeCommands();
 
     void setupDebugMessenger();
-
-    static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
-                                                 const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-                                                 const VkAllocationCallbacks* pAllocator,
-                                                 VkDebugUtilsMessengerEXT* pDebugMessenger)
-    {
-        auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-                instance, "vkCreateDebugUtilsMessengerEXT");
-        if (nullptr != func)
-        {
-            return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-        }
-        else
-        {
-            return VK_ERROR_EXTENSION_NOT_PRESENT;
-        }
-    }
-
-    static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger,
-                                              const VkAllocationCallbacks* pAllocator)
-    {
-        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-                instance, "vkDestroyDebugUtilsMessengerEXT");
-        if (nullptr != func)
-        {
-            func(instance, debugMessenger, pAllocator);
-        }
-    }
 
     static std::vector<char> readFile(const std::string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);

@@ -203,7 +203,7 @@ void Wrapper::cleanup()
 
     if (enableValidationLayers)
     {
-        DestroyDebugUtilsMessengerEXT(pInstance->instance, debugMessenger, nullptr);
+        DebugMessenger::DestroyDebugUtilsMessengerEXT(pInstance, pDebugMessenger, nullptr);
     }
 
     vkDestroySurfaceKHR(pInstance->instance, surface, nullptr);
@@ -1432,18 +1432,7 @@ void Wrapper::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 void Wrapper::setupDebugMessenger()
 {
-    if (!pValidationLayers->IsEnabled())
-    {
-        return;
-    }
-
-    VkDebugUtilsMessengerCreateInfoEXT createInfo;
-    ValidationLayers::populateDebugMessengerCreateInfo(createInfo);
-
-    if (VK_SUCCESS != CreateDebugUtilsMessengerEXT(pInstance->instance, &createInfo, nullptr, &debugMessenger))
-    {
-        throw std::runtime_error("Failed to set up debug messenger!");
-    }
+    pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers);
 }
 
 
