@@ -72,6 +72,11 @@ public:
             throw std::runtime_error("Failed to create instance!");
         }
     }
+
+    ~Instance()
+    {
+        vkDestroyInstance(instance, nullptr);
+    }
 };
 
 #endif //VULKANRENDERER_INSTANCE_H

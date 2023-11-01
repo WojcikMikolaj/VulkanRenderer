@@ -31,10 +31,20 @@ void Wrapper::initWindow()
 
 void Wrapper::initVulkan()
 {
-    createInstance();
-    setupDebugMessenger();
-    createSurface();
-    createPhysicalDevice();
+    //createInstance
+    pValidationLayers = std::make_unique<ValidationLayers>(enableValidationLayers);
+    pAppInfo = std::make_unique<AppInfo>("Test", "None");
+    pInstance = std::make_shared<Instance>(pAppInfo, pValidationLayers);
+
+    //setupDebugMessenger
+    pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers, nullptr);
+
+    //createSurface
+    pSurface = std::make_shared<Surface>(pInstance, pWindow);
+
+    //createPhysicalDevice
+    pPhysicalDevice = std::make_unique<PhysicalDevice>(pInstance, pSurface);
+
     createLogicalDevice();
     createSwapChain();
     createImageViews();
@@ -53,13 +63,6 @@ void Wrapper::initVulkan()
     createDescriptorSets();
     createCommandBuffers();
     createSyncObjects();
-}
-
-void Wrapper::createInstance()
-{
-    pValidationLayers = std::make_unique<ValidationLayers>(enableValidationLayers);
-    pAppInfo = std::make_unique<AppInfo>("Test", "None");
-    pInstance = std::make_shared<Instance>(pAppInfo, pValidationLayers);
 }
 
 void Wrapper::mainLoop()
@@ -206,9 +209,9 @@ void Wrapper::cleanup()
         pDebugMessenger.reset();
     }
 
-
-    vkDestroyInstance(pInstance->instance, nullptr);
-
+    pPhysicalDevice.reset();
+    pSurface.reset();
+    pInstance.reset();
     glfwDestroyWindow(*pWindow);
     pWindow.reset();
 
@@ -327,10 +330,6 @@ void Wrapper::getDeviceQueues()
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
-void Wrapper::createSurface()
-{
-    pSurface = std::make_shared<Surface>(pInstance, pWindow);
-}
 
 void Wrapper::recreateSwapChain()
 {
@@ -1263,18 +1262,3 @@ void Wrapper::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
     vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
 }
-
-
-
-
-void Wrapper::setupDebugMessenger()
-{
-    pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers, nullptr);
-}
-
-void Wrapper::createPhysicalDevice()
-{
-    pPhysicalDevice = std::make_unique<PhysicalDevice>(pInstance, pSurface);
-}
-
-

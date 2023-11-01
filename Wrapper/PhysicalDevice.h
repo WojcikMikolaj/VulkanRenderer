@@ -39,7 +39,11 @@ public:
         PickPhysicalDevice();
     }
 
-
+    ~PhysicalDevice()
+    {
+        pSurface.reset();
+        pInstance.reset();
+    }
 
 };
 #endif //VULKANRENDERER_PHYSICALDEVICE_H

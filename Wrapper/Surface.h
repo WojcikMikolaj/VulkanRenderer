@@ -24,6 +24,7 @@ public:
     ~Surface()
     {
         vkDestroySurfaceKHR(pInstance->instance, surface, nullptr);
+        pInstance.reset();
     }
 };
 #endif //VULKANRENDERER_SURFACE_H

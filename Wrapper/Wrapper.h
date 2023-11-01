@@ -138,8 +138,6 @@ private:
     void createTextureSampler();
     void initVulkan();
 
-    void createInstance();
-
     void mainLoop();
 
     void drawFrame();
@@ -160,7 +158,6 @@ private:
 
     void getDeviceQueues();
 
-    void createSurface();
     void recreateSwapChain();
 
     void createSwapChain();
@@ -190,8 +187,6 @@ private:
 
     void createSyncObjects();
     VkCommandBuffer beginSingleTimeCommands();
-
-    void setupDebugMessenger();
 
     static std::vector<char> readFile(const std::string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -226,7 +221,5 @@ private:
 
         return shaderModule;
     }
-
-    void createPhysicalDevice();
 };
 #endif //VULKANRENDERER_WRAPPER_H
