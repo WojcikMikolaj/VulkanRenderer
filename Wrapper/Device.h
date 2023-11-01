@@ -4,6 +4,7 @@
 
 #ifndef VULKANRENDERER_DEVICE_H
 #define VULKANRENDERER_DEVICE_H
+
 class Device
 {
 

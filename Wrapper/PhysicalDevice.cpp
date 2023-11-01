@@ -3,9 +3,11 @@
 //
 
 #include "PhysicalDevice.h"
+#include "HelperStructs/SwapChainSupportDetails.h"
 #include <vector>
 #include <map>
 #include <iostream>
+#include <set>
 
 void PhysicalDevice::PickPhysicalDevice()
 {
@@ -55,7 +57,7 @@ int PhysicalDevice::RateDeviceSuitability(VkPhysicalDevice device)
 
     score += static_cast<int>(deviceProperties.limits.maxImageDimension2D);
 
-    QueueFamilyIndices indices = findQueueFamilies(device);
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(device, pSurface->surface);
 
     //kolejność powinna być: indices (chyba) -> deviceExtension (na pewno) -> swapChain
     if (!indices.isComplete()
@@ -73,3 +75,33 @@ int PhysicalDevice::RateDeviceSuitability(VkPhysicalDevice device)
     return score;
 }
 
+bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device)
+{
+    return true;
+}
+
+bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice device)
+{
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
+
+    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+
+    for (const auto& extension : availableExtensions)
+    {
+        requiredExtensions.erase(extension.extensionName);
+    }
+
+    return requiredExtensions.empty();
+}
+
+bool PhysicalDevice::checkSwapChainAdequate(VkPhysicalDevice device)
+{
+    bool swapChainAdequate = false;
+    SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(device, pSurface->surface);
+    swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
+    return swapChainAdequate;
+}

@@ -41,7 +41,7 @@ class DebugMessenger{
     const VkAllocationCallbacks* pAllocator;
 
 public:
-    DebugMessenger(std::shared_ptr<Instance>& pInstance, std::unique_ptr<ValidationLayers>& pValidationLayers, const VkAllocationCallbacks* pAllocator)
+    DebugMessenger(std::shared_ptr<Instance> pInstance, std::unique_ptr<ValidationLayers>& pValidationLayers, const VkAllocationCallbacks* pAllocator)
     {
         this->pInstance = pInstance;
         this->pAllocator = pAllocator;

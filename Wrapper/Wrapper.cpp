@@ -24,9 +24,9 @@ void Wrapper::initWindow()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     //glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+    pWindow = std::make_unique<GLFWwindow*>(glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr));
+    glfwSetWindowUserPointer(*pWindow, this);
+    glfwSetFramebufferSizeCallback(*pWindow, framebufferResizeCallback);
 }
 
 void Wrapper::initVulkan()
@@ -34,7 +34,7 @@ void Wrapper::initVulkan()
     createInstance();
     setupDebugMessenger();
     createSurface();
-    pickPhysicalDevice();
+    createPhysicalDevice();
     createLogicalDevice();
     createSwapChain();
     createImageViews();
@@ -64,7 +64,7 @@ void Wrapper::createInstance()
 
 void Wrapper::mainLoop()
 {
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(*pWindow))
     {
         glfwPollEvents();
         drawFrame();
@@ -206,46 +206,15 @@ void Wrapper::cleanup()
         pDebugMessenger.reset();
     }
 
-    vkDestroySurfaceKHR(pInstance->instance, surface, nullptr);
+
     vkDestroyInstance(pInstance->instance, nullptr);
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(*pWindow);
+    pWindow.reset();
 
     glfwTerminate();
 }
 
-
-
-bool Wrapper::isDeviceSuitable(VkPhysicalDevice device)
-{
-    return true;
-}
-
-bool Wrapper::checkDeviceExtensionSupport(VkPhysicalDevice device)
-{
-    uint32_t extensionCount;
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
-
-    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
-
-    std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
-
-    for (const auto& extension : availableExtensions)
-    {
-        requiredExtensions.erase(extension.extensionName);
-    }
-
-    return requiredExtensions.empty();
-}
-
-bool Wrapper::checkSwapChainAdequate(VkPhysicalDevice device)
-{
-    bool swapChainAdequate = false;
-    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-    swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-    return swapChainAdequate;
-}
 
 VkSurfaceFormatKHR Wrapper::chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR>& availableFormats)
@@ -285,7 +254,7 @@ VkExtent2D Wrapper::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilitie
     else
     {
         int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(*pWindow, &width, &height);
 
         VkExtent2D actualExtent = {
                 static_cast<uint32_t>(width),
@@ -303,7 +272,7 @@ VkExtent2D Wrapper::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilitie
 
 void Wrapper::createLogicalDevice()
 {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
@@ -343,7 +312,7 @@ void Wrapper::createLogicalDevice()
         createInfo.enabledLayerCount = 0;
     }
 
-    if (VK_SUCCESS != vkCreateDevice(physicalDevice, &createInfo, nullptr, &device))
+    if (VK_SUCCESS != vkCreateDevice(pPhysicalDevice->physicalDevice, &createInfo, nullptr, &device))
     {
         throw std::runtime_error("Failed to create logical device!");
     }
@@ -353,26 +322,23 @@ void Wrapper::createLogicalDevice()
 
 void Wrapper::getDeviceQueues()
 {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
     vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
 void Wrapper::createSurface()
 {
-    if (VK_SUCCESS != glfwCreateWindowSurface(pInstance->instance, window, nullptr, &surface))
-    {
-        throw std::runtime_error("Failed to create window surface!");
-    }
+    pSurface = std::make_shared<Surface>(pInstance, pWindow);
 }
 
 void Wrapper::recreateSwapChain()
 {
     int width = 0, height = 0;
-    glfwGetFramebufferSize(window, &width, &height);
+    glfwGetFramebufferSize(*pWindow, &width, &height);
     while (width == 0 || height == 0)
     {
-        glfwGetFramebufferSize(window, &width, &height);
+        glfwGetFramebufferSize(*pWindow, &width, &height);
         glfwWaitEvents();
     }
 
@@ -387,7 +353,7 @@ void Wrapper::recreateSwapChain()
 
 void Wrapper::createSwapChain()
 {
-    SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice);
+    SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(pPhysicalDevice->physicalDevice, pSurface->surface);
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -402,7 +368,7 @@ void Wrapper::createSwapChain()
 
     VkSwapchainCreateInfoKHR createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.surface = pSurface->surface;
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -410,7 +376,7 @@ void Wrapper::createSwapChain()
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
     uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -461,33 +427,6 @@ void Wrapper::cleanupSwapChain()
     }
 
     vkDestroySwapchainKHR(device, swapChain, nullptr);
-}
-
-
-SwapChainSupportDetails Wrapper::querySwapChainSupport(VkPhysicalDevice device)
-{
-    SwapChainSupportDetails details;
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface, &details.capabilities);
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, nullptr);
-
-    if (0 != formatCount)
-    {
-        details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount, details.formats.data());
-    }
-
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, nullptr);
-
-    if (0 != presentModeCount)
-    {
-        details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
-    }
-
-    return details;
 }
 
 void Wrapper::createImageViews()
@@ -750,7 +689,7 @@ void Wrapper::createFramebuffers()
 
 void Wrapper::createCommandPool()
 {
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices queueFamilyIndices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -807,7 +746,7 @@ void Wrapper::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize si
 uint32_t Wrapper::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
 {
     VkPhysicalDeviceMemoryProperties memProperties;
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
+    vkGetPhysicalDeviceMemoryProperties(pPhysicalDevice->physicalDevice, &memProperties);
 
     for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
     {
@@ -1174,7 +1113,7 @@ void Wrapper::createTextureSampler()
     samplerInfo.anisotropyEnable = VK_TRUE;
 
     VkPhysicalDeviceProperties properties{};
-    vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+    vkGetPhysicalDeviceProperties(pPhysicalDevice->physicalDevice, &properties);
 
     samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
 
@@ -1331,6 +1270,11 @@ void Wrapper::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 void Wrapper::setupDebugMessenger()
 {
     pDebugMessenger = std::make_unique<DebugMessenger>(pInstance, pValidationLayers, nullptr);
+}
+
+void Wrapper::createPhysicalDevice()
+{
+    pPhysicalDevice = std::make_unique<PhysicalDevice>(pInstance, pSurface);
 }
 
 

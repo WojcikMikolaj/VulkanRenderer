@@ -8,18 +8,38 @@
 #include <memory>
 #include "Instance.h"
 #include "HelperStructs/QueueFamilyIndices.h"
+#include "Surface.h"
+
+const std::vector<const char*> deviceExtensions ={
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+#if __APPLE__
+        "VK_KHR_portability_subset",
+#endif
+};
+
 
 class PhysicalDevice
 {
     std::shared_ptr<Instance> pInstance;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    std::shared_ptr<Surface> pSurface;
 
     void PickPhysicalDevice();
-    int RateDeviceSuitability(VkPhysicalDevice device)
-public:
-    PhysicalDevice()
-    {
+    int RateDeviceSuitability(VkPhysicalDevice device);
+    bool isDeviceSuitable(VkPhysicalDevice device);
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+    bool checkSwapChainAdequate(VkPhysicalDevice device);
 
+public:
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+    PhysicalDevice(std::shared_ptr<Instance> pInstance, std::shared_ptr<Surface> pSurface)
+    {
+        this->pInstance = pInstance;
+        this->pSurface = pSurface;
+        PickPhysicalDevice();
     }
+
+
+
 };
 #endif //VULKANRENDERER_PHYSICALDEVICE_H

@@ -36,13 +36,6 @@ const uint32_t HEIGHT = 600;
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-const std::vector<const char*> deviceExtensions ={
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-#if __APPLE__
-        "VK_KHR_portability_subset",
-#endif
-};
-
 #ifdef NDEBUG
 const bool enableValidationLayers = false;
 #else
@@ -84,13 +77,18 @@ private:
 
     uint32_t currentFrame = 0;
 
-    GLFWwindow* window;
+    std::unique_ptr<GLFWwindow*> pWindow;
 
     std::unique_ptr<DebugMessenger> pDebugMessenger;
 
+    std::shared_ptr<Surface> pSurface;
+    std::unique_ptr<PhysicalDevice> pPhysicalDevice;
+
     VkDevice device;
     VkQueue graphicsQueue;
-    VkSurfaceKHR surface;
+
+
+
     VkQueue presentQueue;
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
@@ -152,23 +150,11 @@ private:
 
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
-    void pickPhysicalDevice();
-
-    int rateDeviceSuitability(VkPhysicalDevice device);
-
-    bool isDeviceSuitable(VkPhysicalDevice device);
-
-    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-
-    bool checkSwapChainAdequate(VkPhysicalDevice device);
-
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
     VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
     void createLogicalDevice();
 
@@ -179,8 +165,6 @@ private:
 
     void createSwapChain();
     void cleanupSwapChain();
-
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
 
     void createImageViews();
 
@@ -242,5 +226,7 @@ private:
 
         return shaderModule;
     }
+
+    void createPhysicalDevice();
 };
 #endif //VULKANRENDERER_WRAPPER_H
