@@ -30,6 +30,7 @@
 #include "HelperStructs/SwapChainSupportDetails.h"
 #include "Instance.h"
 #include "Debug/DebugMessenger.h"
+#include "Window.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -77,7 +78,7 @@ private:
 
     uint32_t currentFrame = 0;
 
-    std::unique_ptr<GLFWwindow*> pWindow;
+    std::unique_ptr<Window> pWindow;
 
     std::unique_ptr<DebugMessenger> pDebugMessenger;
 

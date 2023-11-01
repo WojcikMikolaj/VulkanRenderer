@@ -5,6 +5,7 @@
 #ifndef VULKANRENDERER_SURFACE_H
 #define VULKANRENDERER_SURFACE_H
 #include "Instance.h"
+#include "Window.h"
 #include <GLFW/glfw3.h>
 
 class Surface
@@ -12,10 +13,10 @@ class Surface
     std::shared_ptr<Instance> pInstance;
 public:
     VkSurfaceKHR surface;
-    Surface(std::shared_ptr<Instance> pInstance, std::unique_ptr<GLFWwindow*>& pWindow)
+    Surface(std::shared_ptr<Instance> pInstance, std::unique_ptr<Window>& pWindow)
     {
         this->pInstance = pInstance;
-        if (VK_SUCCESS != glfwCreateWindowSurface(this->pInstance->instance, *pWindow, nullptr, &surface))
+        if (VK_SUCCESS != glfwCreateWindowSurface(this->pInstance->instance, pWindow->window, nullptr, &surface))
         {
             throw std::runtime_error("Failed to create window surface!");
         }

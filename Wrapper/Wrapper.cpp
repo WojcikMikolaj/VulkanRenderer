@@ -24,9 +24,9 @@ void Wrapper::initWindow()
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     //glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
-    pWindow = std::make_unique<GLFWwindow*>(glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr));
-    glfwSetWindowUserPointer(*pWindow, this);
-    glfwSetFramebufferSizeCallback(*pWindow, framebufferResizeCallback);
+    pWindow = std::make_unique<Window>(glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr));
+    glfwSetWindowUserPointer(pWindow->window, this);
+    glfwSetFramebufferSizeCallback(pWindow->window, framebufferResizeCallback);
 }
 
 void Wrapper::initVulkan()
@@ -67,7 +67,7 @@ void Wrapper::initVulkan()
 
 void Wrapper::mainLoop()
 {
-    while (!glfwWindowShouldClose(*pWindow))
+    while (!glfwWindowShouldClose(pWindow->window))
     {
         glfwPollEvents();
         drawFrame();
@@ -212,7 +212,6 @@ void Wrapper::cleanup()
     pPhysicalDevice.reset();
     pSurface.reset();
     pInstance.reset();
-    glfwDestroyWindow(*pWindow);
     pWindow.reset();
 
     glfwTerminate();
@@ -257,7 +256,7 @@ VkExtent2D Wrapper::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilitie
     else
     {
         int width, height;
-        glfwGetFramebufferSize(*pWindow, &width, &height);
+        glfwGetFramebufferSize(pWindow->window, &width, &height);
 
         VkExtent2D actualExtent = {
                 static_cast<uint32_t>(width),
@@ -334,10 +333,10 @@ void Wrapper::getDeviceQueues()
 void Wrapper::recreateSwapChain()
 {
     int width = 0, height = 0;
-    glfwGetFramebufferSize(*pWindow, &width, &height);
+    glfwGetFramebufferSize(pWindow->window, &width, &height);
     while (width == 0 || height == 0)
     {
-        glfwGetFramebufferSize(*pWindow, &width, &height);
+        glfwGetFramebufferSize(pWindow->window, &width, &height);
         glfwWaitEvents();
     }
 
