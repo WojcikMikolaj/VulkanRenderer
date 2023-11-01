@@ -1,12 +1,13 @@
 //
 // Created by "Mikołaj Wójcik" on 01.11.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_WINDOW_H
-#define VULKANRENDERER_WINDOW_H
 #include <GLFW/glfw3.h>
 
-class Window
+export module Window;
+
+export class Window
 {
 public:
     GLFWwindow* window;
@@ -20,5 +21,3 @@ public:
         glfwDestroyWindow(window);
     }
 };
-
-#endif //VULKANRENDERER_WINDOW_H

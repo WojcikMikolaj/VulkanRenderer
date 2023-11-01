@@ -1,15 +1,19 @@
 //
 // Created by Mikołaj Wójcik on 29.10.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_SWAPCHAINSUPPORTDETAILS_H
-#define VULKANRENDERER_SWAPCHAINSUPPORTDETAILS_H
+import <vector>;
+import PhysicalDevice;
+import Surface;
 
-#include "../PhysicalDevice.h"
-#include "../Surface.h"
+#include <vulkan/vulkan.h>
 
-struct SwapChainSupportDetails
+export module SwapChainSupportDetails;
+
+export class SwapChainSupportDetails
 {
+public:
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
@@ -40,5 +44,3 @@ struct SwapChainSupportDetails
         return details;
     }
 };
-
-#endif //VULKANRENDERER_SWAPCHAINSUPPORTDETAILS_H

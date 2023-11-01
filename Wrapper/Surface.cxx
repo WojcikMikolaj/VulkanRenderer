@@ -1,14 +1,16 @@
 //
 // Created by "Mikołaj Wójcik" on 01.11.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_SURFACE_H
-#define VULKANRENDERER_SURFACE_H
-#include "Instance.h"
-#include "Window.h"
+import Instance;
+import Window;
+
 #include <GLFW/glfw3.h>
 
-class Surface
+export module Surface;
+
+export class Surface
 {
     std::shared_ptr<Instance> pInstance;
 public:
@@ -28,4 +30,3 @@ public:
         pInstance.reset();
     }
 };
-#endif //VULKANRENDERER_SURFACE_H

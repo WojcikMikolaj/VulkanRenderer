@@ -1,4 +1,4 @@
-#include "Wrapper/Wrapper.h"
+import Wrapper;
 
 int main()
 {

@@ -1,15 +1,15 @@
 //
 // Created by "Mikołaj Wójcik" on 31.10.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_DEBUGMESSENGER_H
-#define VULKANRENDERER_DEBUGMESSENGER_H
+import <memory>;
 
-#include <memory>
 #include <vulkan/vulkan.h>
-#include "../Instance.h"
 
-class DebugMessenger{
+export module DebugMessenger;
+
+export class DebugMessenger{
     VkDebugUtilsMessengerEXT debugMessenger;
 
     VkResult CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, VkDebugUtilsMessengerEXT* pDebugMessenger)
@@ -39,7 +39,6 @@ class DebugMessenger{
 
     std::shared_ptr<Instance> pInstance;
     const VkAllocationCallbacks* pAllocator;
-
 public:
     DebugMessenger(std::shared_ptr<Instance> pInstance, std::unique_ptr<ValidationLayers>& pValidationLayers, const VkAllocationCallbacks* pAllocator)
     {
@@ -65,5 +64,3 @@ public:
         DestroyDebugUtilsMessengerEXT();
     }
 };
-
-#endif //VULKANRENDERER_DEBUGMESSENGER_H

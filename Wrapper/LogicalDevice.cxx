@@ -1,19 +1,22 @@
 //
 // Created by "Mikołaj Wójcik" on 01.11.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_LOGICALDEVICE_H
-#define VULKANRENDERER_LOGICALDEVICE_H
 
-#include <memory>
-#include <vector>
-#include <set>
+import <memory>;
+import <vector>;
+import <set>;
+import <stdexcept>;
+import PhysicalDevice;
+import Surface;
+import QueueFamilyIndices;
+
 #include <vulkan/vulkan.h>
 
-#include "PhysicalDevice.h"
-#include "Surface.h"
+export module LogicalDevice;
 
-class LogicalDevice
+export class LogicalDevice
 {
 public:
     VkDevice device;
@@ -84,4 +87,3 @@ public:
     }
 
 };
-#endif //VULKANRENDERER_LOGICALDEVICE_H

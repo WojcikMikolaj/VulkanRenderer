@@ -1,11 +1,17 @@
 //
 // Created by Mikołaj Wójcik on 29.10.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_VERTICES_H
-#define VULKANRENDERER_VERTICES_H
+import <array>;
 
-struct Vertex_p2_c3_t2 {
+#include "glm/glm.hpp"
+#include <vulkan/vulkan.h>
+
+export module Vertices;
+
+export class Vertex_p2_c3_t2 {
+public:
     glm::vec2 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
@@ -40,5 +46,3 @@ struct Vertex_p2_c3_t2 {
         return attributeDescriptions;
     }
 };
-
-#endif //VULKANRENDERER_VERTICES_H

@@ -1,16 +1,18 @@
 //
 // Created by Mikołaj Wójcik on 29.10.2023.
 //
+module;
 
-#ifndef VULKANRENDERER_QUEUEFAMILYINDICES_H
-#define VULKANRENDERER_QUEUEFAMILYINDICES_H
+import <optional>;
+import <vector>;
 
-#include <optional>
-#include <vector>
 #include <vulkan/vulkan.h>
 
-struct QueueFamilyIndices
+export module QueueFamilyIndices;
+
+export class QueueFamilyIndices
 {
+public:
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
 
@@ -57,5 +59,3 @@ struct QueueFamilyIndices
         return indices;
     }
 };
-
-#endif //VULKANRENDERER_QUEUEFAMILYINDICES_H

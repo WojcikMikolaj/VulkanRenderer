@@ -9,11 +9,26 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 find_package(Vulkan REQUIRED FATAL_ERROR)
 
-set(PROJECT_SOURCES main.cpp)
+set(PROJECT_SOURCES main.cxx)
 
-add_executable(VulkanRenderer Wrapper/Wrapper.cpp Wrapper/Wrapper.h Wrapper/HelperStructs/QueueFamilyIndices.h Wrapper/HelperStructs/SwapChainSupportDetails.h Wrapper/HelperStructs/VertexStructs/Vertices.h Wrapper/HelperStructs/UniformBufferObjectStructs/UniformBufferObjects.h Wrapper/Debug/ValidationLayers.cpp Wrapper/Debug/ValidationLayers.h Wrapper/Instance.cpp Wrapper/Instance.h Wrapper/AppInfo.cpp Wrapper/AppInfo.h Wrapper/Debug/DebugMessenger.h Wrapper/Device.cpp Wrapper/Device.h Wrapper/PhysicalDevice.cpp Wrapper/PhysicalDevice.h Wrapper/Surface.h Wrapper/Window.h Wrapper/LogicalDevice.h Wrapper/SwapChain.h
-        Wrapper/SwapChain.cpp)
-target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES})
+add_executable(VulkanRenderer)
+target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
+        PUBLIC
+        FILE_SET CXX_MODULES FILES
+            Wrapper/Debug/DebugMessenger.cxx
+            Wrapper/Wrapper.cxx
+            Wrapper/HelperStructs/QueueFamilyIndices.cxx
+            Wrapper/HelperStructs/SwapChainSupportDetails.cxx
+            Wrapper/HelperStructs/VertexStructs/Vertices.cxx
+            Wrapper/HelperStructs/UBO/UBO.cxx
+            Wrapper/Debug/ValidationLayers.cxx
+            Wrapper/Instance.cxx
+            Wrapper/AppInfo.cxx
+            Wrapper/PhysicalDevice.cxx
+            Wrapper/Surface.cxx
+            Wrapper/Window.cxx
+            Wrapper/LogicalDevice.cxx
+            Wrapper/SwapChain.cxx)
 
 include_directories($ENV{VULKAN_SDK}/Include)
 link_directories($ENV{VULKAN_SDK}/Lib;$ENV{VULKAN_SDK}/Bin)
