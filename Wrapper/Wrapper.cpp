@@ -214,71 +214,6 @@ void Wrapper::cleanup()
     glfwTerminate();
 }
 
-void Wrapper::pickPhysicalDevice()
-{
-    uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(pInstance->instance, &deviceCount, nullptr);
-
-    if (0 == deviceCount)
-    {
-        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
-    }
-
-    std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(pInstance->instance, &deviceCount, devices.data());
-
-    std::multimap<int, VkPhysicalDevice> candidates;
-
-    for (const auto& device : devices)
-    {
-        int score = rateDeviceSuitability(device);
-        candidates.insert(std::make_pair(score, device));
-    }
-
-    if (candidates.rbegin()->first > 0)
-    {
-        physicalDevice = candidates.rbegin()->second;
-    }
-    else
-    {
-        throw std::runtime_error("Failed to find suitable GPU!");
-    }
-}
-
-int Wrapper::rateDeviceSuitability(VkPhysicalDevice device)
-{
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(device, &deviceProperties);
-
-    VkPhysicalDeviceFeatures deviceFeatures;
-    vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-    int score = 0;
-
-    if (VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU == deviceProperties.deviceType)
-    {
-        score += 1000;
-    }
-
-    score += static_cast<int>(deviceProperties.limits.maxImageDimension2D);
-
-    QueueFamilyIndices indices = findQueueFamilies(device);
-
-    //kolejność powinna być: indices (chyba) -> deviceExtension (na pewno) -> swapChain
-    if (!indices.isComplete()
-        || !checkDeviceExtensionSupport(device)
-        || !checkSwapChainAdequate(device)
-       // || !deviceFeatures.geometryShader
-        || !deviceFeatures.tessellationShader
-        || !deviceFeatures.samplerAnisotropy
-       )
-    {
-        std::cout << "Device: " << deviceProperties.deviceName << " Score: " << "0" << std::endl;
-        return 0;
-    }
-    std::cout << "Device: " << deviceProperties.deviceName << " Score: " << score << std::endl;
-    return score;
-}
 
 
 bool Wrapper::isDeviceSuitable(VkPhysicalDevice device)
@@ -364,43 +299,6 @@ VkExtent2D Wrapper::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilitie
 
         return actualExtent;
     }
-}
-
-QueueFamilyIndices Wrapper::findQueueFamilies(VkPhysicalDevice device)
-{
-    QueueFamilyIndices indices;
-
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
-
-    int i = 0;
-    for (const auto& queueFamily : queueFamilies)
-    {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-        {
-            indices.graphicsFamily = i;
-        }
-
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
-
-        if (presentSupport)
-        {
-            indices.presentFamily = i;
-        }
-
-        if (indices.isComplete())
-        {
-            break;
-        }
-
-        i++;
-    }
-
-    return indices;
 }
 
 void Wrapper::createLogicalDevice()
@@ -706,8 +604,8 @@ void Wrapper::createGraphicsPipeline()
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
 
-    auto bindingDescription = Vertex_dpos2_col3_tex2::getBindingDescription();
-    auto attributeDescriptions = Vertex_dpos2_col3_tex2::getAttributeDescriptions();
+    auto bindingDescription = Vertex_p2_c3_t2::getBindingDescription();
+    auto attributeDescriptions = Vertex_p2_c3_t2::getAttributeDescriptions();
 
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;

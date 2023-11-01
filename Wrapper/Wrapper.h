@@ -54,7 +54,7 @@ const std::vector<VkDynamicState> dynamicStates = {
         VK_DYNAMIC_STATE_SCISSOR
 };
 
-const std::vector<Vertex_dpos2_col3_tex2> vertices = {
+const std::vector<Vertex_p2_c3_t2> vertices = {
         {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
         {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
         {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
@@ -87,7 +87,7 @@ private:
     GLFWwindow* window;
 
     std::unique_ptr<DebugMessenger> pDebugMessenger;
-    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
     VkDevice device;
     VkQueue graphicsQueue;
     VkSurfaceKHR surface;
@@ -150,11 +150,7 @@ private:
 
     void cleanup();
 
-
     void endSingleTimeCommands(VkCommandBuffer commandBuffer);
-
-
-
 
     void pickPhysicalDevice();
 

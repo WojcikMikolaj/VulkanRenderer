@@ -10,3 +10,6 @@
 [submodule "stb"]
 	path = stb
 	url = https://github.com/WojcikMikolaj/stb.git
+[submodule "VulkanMemoryAllocator"]
+	path = VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
