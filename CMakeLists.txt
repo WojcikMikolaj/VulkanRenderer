@@ -11,7 +11,7 @@ find_package(Vulkan REQUIRED FATAL_ERROR)
 
 set(PROJECT_SOURCES main.cpp)
 
-add_executable(VulkanRenderer Wrapper/Wrapper.cpp Wrapper/Wrapper.h Wrapper/HelperStructs/QueueFamilyIndices.h Wrapper/HelperStructs/SwapChainSupportDetails.h Wrapper/HelperStructs/VertexStructs/Vertices.h Wrapper/HelperStructs/UniformBufferObjectStructs/UniformBufferObjects.h Wrapper/Debug/ValidationLayers.cpp Wrapper/Debug/ValidationLayers.h Wrapper/Instance.cpp Wrapper/Instance.h Wrapper/AppInfo.cpp Wrapper/AppInfo.h Wrapper/Debug/DebugMessenger.h Wrapper/Device.cpp Wrapper/Device.h Wrapper/PhysicalDevice.cpp Wrapper/PhysicalDevice.h Wrapper/Surface.h Wrapper/Window.h)
+add_executable(VulkanRenderer Wrapper/Wrapper.cpp Wrapper/Wrapper.h Wrapper/HelperStructs/QueueFamilyIndices.h Wrapper/HelperStructs/SwapChainSupportDetails.h Wrapper/HelperStructs/VertexStructs/Vertices.h Wrapper/HelperStructs/UniformBufferObjectStructs/UniformBufferObjects.h Wrapper/Debug/ValidationLayers.cpp Wrapper/Debug/ValidationLayers.h Wrapper/Instance.cpp Wrapper/Instance.h Wrapper/AppInfo.cpp Wrapper/AppInfo.h Wrapper/Debug/DebugMessenger.h Wrapper/Device.cpp Wrapper/Device.h Wrapper/PhysicalDevice.cpp Wrapper/PhysicalDevice.h Wrapper/Surface.h Wrapper/Window.h Wrapper/LogicalDevice.h)
 target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES})
 
 include_directories($ENV{VULKAN_SDK}/Include)

@@ -31,6 +31,7 @@
 #include "Instance.h"
 #include "Debug/DebugMessenger.h"
 #include "Window.h"
+#include "LogicalDevice.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -84,13 +85,9 @@ private:
 
     std::shared_ptr<Surface> pSurface;
     std::unique_ptr<PhysicalDevice> pPhysicalDevice;
-
-    VkDevice device;
-    VkQueue graphicsQueue;
+    std::unique_ptr<LogicalDevice> pLogicalDevice;
 
 
-
-    VkQueue presentQueue;
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
     VkFormat swapChainImageFormat;
@@ -155,10 +152,6 @@ private:
 
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 
-    void createLogicalDevice();
-
-    void getDeviceQueues();
-
     void recreateSwapChain();
 
     void createSwapChain();
@@ -215,7 +208,7 @@ private:
         createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
         VkShaderModule shaderModule;
-        if(VK_SUCCESS != vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule))
+        if(VK_SUCCESS != vkCreateShaderModule(pLogicalDevice->device, &createInfo, nullptr, &shaderModule))
         {
             throw std::runtime_error("Failed to create shader module!");
         }
