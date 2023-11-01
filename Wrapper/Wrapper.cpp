@@ -44,12 +44,14 @@ void Wrapper::initVulkan()
     pSurface = std::make_shared<Surface>(pInstance, pWindow);
 
     //createPhysicalDevice
-    pPhysicalDevice = std::make_unique<PhysicalDevice>(pInstance, pSurface);
+    pPhysicalDevice = std::make_shared<PhysicalDevice>(pInstance, pSurface);
 
     //createLogicalDevice
-    pLogicalDevice = std::make_unique<LogicalDevice>(pPhysicalDevice, pSurface, pValidationLayers);
+    pLogicalDevice = std::make_shared<LogicalDevice>(pPhysicalDevice, pSurface, pValidationLayers);
 
-    createSwapChain();
+    //createSwapChain
+    pSwapChain = std::make_unique<SwapChain>(pPhysicalDevice, pSurface, pLogicalDevice, pWindow);
+
     createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
@@ -84,7 +86,7 @@ void Wrapper::drawFrame()
     vkWaitForFences(pLogicalDevice->device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(pLogicalDevice->device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
+    VkResult result = vkAcquireNextImageKHR(pLogicalDevice->device, pSwapChain->swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame],
                                             VK_NULL_HANDLE,
                                             &imageIndex);
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
@@ -128,7 +130,7 @@ void Wrapper::drawFrame()
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = {swapChain};
+    VkSwapchainKHR swapChains[] = {pSwapChain->swapChain};
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
     presentInfo.pImageIndices = &imageIndex;
@@ -159,7 +161,7 @@ void Wrapper::updateUniformBuffer(uint32_t uint32)
     UniformBufferObject_M4_V4_P4 ubo{};
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f,
+    ubo.proj = glm::perspective(glm::radians(45.0f), pSwapChain->swapChainExtent.width / static_cast<float>(pSwapChain->swapChainExtent.height), 0.1f,
                                 10.0f);
     //flipping Y-axis
     ubo.proj[1][1] *= -1;
@@ -220,62 +222,6 @@ void Wrapper::cleanup()
     glfwTerminate();
 }
 
-
-VkSurfaceFormatKHR Wrapper::chooseSwapSurfaceFormat(
-        const std::vector<VkSurfaceFormatKHR>& availableFormats)
-{
-    for (const auto& availableFormat : availableFormats)
-    {
-        if (VK_FORMAT_B8G8R8A8_SRGB == availableFormat.format
-            && VK_COLOR_SPACE_SRGB_NONLINEAR_KHR == availableFormat.colorSpace)
-        {
-            return availableFormat;
-        }
-    }
-
-    return availableFormats[0];
-}
-
-VkPresentModeKHR Wrapper::chooseSwapPresentMode(
-        const std::vector<VkPresentModeKHR>& availablePresentModes)
-{
-    for (const auto& availablePresentMode : availablePresentModes)
-    {
-        if (VK_PRESENT_MODE_MAILBOX_KHR == availablePresentMode)
-        {
-            return availablePresentMode;
-        }
-    }
-
-    return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-VkExtent2D Wrapper::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
-{
-    if (std::numeric_limits<uint32_t>::max() != capabilities.currentExtent.width)
-    {
-        return capabilities.currentExtent;
-    }
-    else
-    {
-        int width, height;
-        glfwGetFramebufferSize(pWindow->window, &width, &height);
-
-        VkExtent2D actualExtent = {
-                static_cast<uint32_t>(width),
-                static_cast<uint32_t>(height)
-        };
-
-        actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width,
-                                        capabilities.maxImageExtent.width);
-        actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height,
-                                         capabilities.maxImageExtent.height);
-
-        return actualExtent;
-    }
-}
-
-
 void Wrapper::recreateSwapChain()
 {
     int width = 0, height = 0;
@@ -290,72 +236,10 @@ void Wrapper::recreateSwapChain()
 
     cleanupSwapChain();
 
-    createSwapChain();
+
+    pSwapChain = std::make_shared<SwapChain>(pPhysicalDevice, pSurface, pLogicalDevice, pWindow);
     createImageViews();
     createFramebuffers();
-}
-
-void Wrapper::createSwapChain()
-{
-    SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(pPhysicalDevice->physicalDevice, pSurface->surface);
-
-    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
-
-    uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-    if (swapChainSupport.capabilities.maxImageCount > 0
-        && imageCount > swapChainSupport.capabilities.maxImageCount)
-    {
-        imageCount = swapChainSupport.capabilities.maxImageCount;
-    }
-
-    VkSwapchainCreateInfoKHR createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = pSurface->surface;
-    createInfo.minImageCount = imageCount;
-    createInfo.imageFormat = surfaceFormat.format;
-    createInfo.imageColorSpace = surfaceFormat.colorSpace;
-    createInfo.imageExtent = extent;
-    createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-    QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
-    uint32_t queueFamilyIndices[] = {indices.graphicsFamily.value(), indices.presentFamily.value()};
-
-    if (indices.graphicsFamily != indices.presentFamily)
-    {
-        createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-        createInfo.queueFamilyIndexCount = 2;
-        createInfo.pQueueFamilyIndices = queueFamilyIndices;
-    }
-    else
-    {
-        createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        createInfo.queueFamilyIndexCount = 0; //optional
-        createInfo.pQueueFamilyIndices = nullptr; //optional
-    }
-
-    createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-
-    createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-
-    createInfo.presentMode = presentMode;
-    createInfo.clipped = VK_TRUE;
-
-    createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-    if (VK_SUCCESS != vkCreateSwapchainKHR(pLogicalDevice->device, &createInfo, nullptr, &swapChain))
-    {
-        throw std::runtime_error("Failed to create swap chain!");
-    }
-
-    vkGetSwapchainImagesKHR(pLogicalDevice->device, swapChain, &imageCount, nullptr);
-    swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(pLogicalDevice->device, swapChain, &imageCount, swapChainImages.data());
-
-    swapChainImageFormat = surfaceFormat.format;
-    swapChainExtent = extent;
 }
 
 void Wrapper::cleanupSwapChain()
@@ -370,23 +254,23 @@ void Wrapper::cleanupSwapChain()
         vkDestroyImageView(pLogicalDevice->device, imageView, nullptr);
     }
 
-    vkDestroySwapchainKHR(pLogicalDevice->device, swapChain, nullptr);
+    pSwapChain.reset();
 }
 
 void Wrapper::createImageViews()
 {
-    swapChainImageViews.resize(swapChainImages.size());
+    swapChainImageViews.resize(pSwapChain->swapChainImages.size());
 
-    for (uint32_t i = 0; i < swapChainImages.size(); i++)
+    for (uint32_t i = 0; i < pSwapChain->swapChainImages.size(); i++)
     {
-        swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat);
+        swapChainImageViews[i] = createImageView((pSwapChain->swapChainImages)[i], pSwapChain->swapChainImageFormat);
     }
 }
 
 void Wrapper::createRenderPass()
 {
     VkAttachmentDescription colorAttachment{};
-    colorAttachment.format = swapChainImageFormat;
+    colorAttachment.format = pSwapChain->swapChainImageFormat;
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -505,14 +389,14 @@ void Wrapper::createGraphicsPipeline()
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapChainExtent.width);
-    viewport.height = static_cast<float>(swapChainExtent.height);
+    viewport.width = static_cast<float>(pSwapChain->swapChainExtent.width);
+    viewport.height = static_cast<float>(pSwapChain->swapChainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
+    scissor.extent = pSwapChain->swapChainExtent;
 
     VkPipelineViewportStateCreateInfo viewportState{};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -620,8 +504,8 @@ void Wrapper::createFramebuffers()
         framebufferInfo.renderPass = renderPass;
         framebufferInfo.attachmentCount = 1;
         framebufferInfo.pAttachments = attachments;
-        framebufferInfo.width = swapChainExtent.width;
-        framebufferInfo.height = swapChainExtent.height;
+        framebufferInfo.width = pSwapChain->swapChainExtent.width;
+        framebufferInfo.height = pSwapChain->swapChainExtent.height;
         framebufferInfo.layers = 1;
 
         if (VK_SUCCESS != vkCreateFramebuffer(pLogicalDevice->device, &framebufferInfo, nullptr, &swapChainFramebuffers[i]))
@@ -1107,7 +991,7 @@ void Wrapper::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
     renderPassInfo.renderPass = renderPass;
     renderPassInfo.framebuffer = swapChainFramebuffers[imageIndex];
     renderPassInfo.renderArea.offset = {0, 0};
-    renderPassInfo.renderArea.extent = swapChainExtent;
+    renderPassInfo.renderArea.extent = pSwapChain->swapChainExtent;
 
     VkClearValue clearColor = {{{0.0f, 0.0f, 0.0f, 1.0f}}};
     renderPassInfo.clearValueCount = 1;
@@ -1124,15 +1008,15 @@ void Wrapper::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = static_cast<float>(swapChainExtent.width);
-    viewport.height = static_cast<float>(swapChainExtent.height);
+    viewport.width = static_cast<float>(pSwapChain->swapChainExtent.width);
+    viewport.height = static_cast<float>(pSwapChain->swapChainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
-    scissor.extent = swapChainExtent;
+    scissor.extent = pSwapChain->swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1,

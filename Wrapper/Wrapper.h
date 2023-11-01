@@ -32,6 +32,7 @@
 #include "Debug/DebugMessenger.h"
 #include "Window.h"
 #include "LogicalDevice.h"
+#include "SwapChain.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -84,14 +85,11 @@ private:
     std::unique_ptr<DebugMessenger> pDebugMessenger;
 
     std::shared_ptr<Surface> pSurface;
-    std::unique_ptr<PhysicalDevice> pPhysicalDevice;
-    std::unique_ptr<LogicalDevice> pLogicalDevice;
+    std::shared_ptr<PhysicalDevice> pPhysicalDevice;
+    std::shared_ptr<LogicalDevice> pLogicalDevice;
 
+    std::shared_ptr<SwapChain> pSwapChain;
 
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
     std::vector<VkImageView> swapChainImageViews;
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
@@ -154,7 +152,6 @@ private:
 
     void recreateSwapChain();
 
-    void createSwapChain();
     void cleanupSwapChain();
 
     void createImageViews();
