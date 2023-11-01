@@ -21,7 +21,7 @@ public:
     VkQueue graphicsQueue;
     VkQueue presentQueue;
 
-    LogicalDevice(std::unique_ptr<PhysicalDevice>& pPhysicalDevice, std::shared_ptr<Surface>& pSurface, std::unique_ptr<ValidationLayers>& pValidationLayers)
+    LogicalDevice(std::shared_ptr<PhysicalDevice>& pPhysicalDevice, std::shared_ptr<Surface>& pSurface, std::unique_ptr<ValidationLayers>& pValidationLayers)
     {
         QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
 
@@ -76,7 +76,7 @@ public:
         vkDestroyDevice(device, nullptr);
     }
 
-    void getDeviceQueues(std::unique_ptr<PhysicalDevice>& pPhysicalDevice, std::shared_ptr<Surface>& pSurface)
+    void getDeviceQueues(std::shared_ptr<PhysicalDevice>& pPhysicalDevice, std::shared_ptr<Surface>& pSurface)
     {
         QueueFamilyIndices indices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
         vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
