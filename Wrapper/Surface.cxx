@@ -3,10 +3,14 @@
 //
 module;
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#include <memory>
+#include <stdexcept>
+#include <vulkan/vulkan.h>
+
 import Instance;
 import Window;
-
-#include <GLFW/glfw3.h>
 
 export module Surface;
 

@@ -3,19 +3,22 @@
 //
 module;
 
-import <memory>;
-import <map>;
-import <set>;
+#include <memory>
+#include <map>
+#include <set>
+#include <vector>
+#include <stdexcept>
+#include <iostream>
+#include <vulkan/vulkan.h>
+
 import Instance;
 import QueueFamilyIndices;
 import Surface;
 import SwapChainSupportDetails;
 
-#include <vulkan/vulkan.h>
-
 export module PhysicalDevice;
 
-const std::vector<const char*> deviceExtensions ={
+export const std::vector<const char*> deviceExtensions ={
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #if __APPLE__
         "VK_KHR_portability_subset",
@@ -27,7 +30,7 @@ export class PhysicalDevice
     std::shared_ptr<Instance> pInstance;
     std::shared_ptr<Surface> pSurface;
 
-    void PhysicalDevice::PickPhysicalDevice()
+    void PickPhysicalDevice()
     {
         uint32_t deviceCount = 0;
         vkEnumeratePhysicalDevices(pInstance->instance, &deviceCount, nullptr);
@@ -58,7 +61,7 @@ export class PhysicalDevice
         }
     }
 
-    int PhysicalDevice::RateDeviceSuitability(VkPhysicalDevice device)
+    int RateDeviceSuitability(VkPhysicalDevice device)
     {
         VkPhysicalDeviceProperties deviceProperties;
         vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -93,12 +96,12 @@ export class PhysicalDevice
         return score;
     }
 
-    bool PhysicalDevice::isDeviceSuitable(VkPhysicalDevice device)
+    bool isDeviceSuitable(VkPhysicalDevice device)
     {
         return true;
     }
 
-    bool PhysicalDevice::checkDeviceExtensionSupport(VkPhysicalDevice device)
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device)
     {
         uint32_t extensionCount;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -116,7 +119,7 @@ export class PhysicalDevice
         return requiredExtensions.empty();
     }
 
-    bool PhysicalDevice::checkSwapChainAdequate(VkPhysicalDevice device)
+    bool checkSwapChainAdequate(VkPhysicalDevice device)
     {
         bool swapChainAdequate = false;
         SwapChainSupportDetails swapChainSupport = SwapChainSupportDetails::querySwapChainSupport(device, pSurface->surface);

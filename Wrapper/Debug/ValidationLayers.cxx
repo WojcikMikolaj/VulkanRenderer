@@ -3,9 +3,8 @@
 //
 module;
 
-import <vector>;
-import <iostream>;
-
+#include <vector>
+#include <iostream>
 #include <vulkan/vulkan.h>
 
 export module ValidationLayers;
@@ -63,7 +62,7 @@ public:
         return validationLayers.data();
     }
 
-    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
+    static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo)
     {
         createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -85,7 +84,7 @@ public:
         return VK_FALSE;
     }
 
-    bool ValidationLayers::IsEnabled()
+    bool IsEnabled()
     {
         return isEnabled;
     }

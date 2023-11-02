@@ -3,9 +3,12 @@
 //
 module;
 
-import <memory>;
-
+#include <memory>
+#include <stdexcept>
 #include <vulkan/vulkan.h>
+
+import Instance;
+import ValidationLayers;
 
 export module DebugMessenger;
 

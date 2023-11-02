@@ -3,7 +3,7 @@
 //
 module;
 
-import <string>;
+#include <string>
 
 export module AppInfo;
 
@@ -20,42 +20,42 @@ public:
         this->EngineName = std::string(AppName);
     }
 
-    const char *AppInfo::GetAppName()
+    const char* GetAppName()
     {
         return AppName.c_str();
     }
 
-    uint32_t AppInfo::GetAppMajorVersion()
+    uint32_t GetAppMajorVersion()
     {
         return 1;
     }
 
-    uint32_t AppInfo::GetAppMinorVersion()
+    uint32_t GetAppMinorVersion()
     {
         return 0;
     }
 
-    uint32_t AppInfo::GetAppPatchVersion()
+    uint32_t GetAppPatchVersion()
     {
         return 0;
     }
 
-    const char *AppInfo::GetEngineName()
+    const char* GetEngineName()
     {
         return EngineName.c_str();
     }
 
-    uint32_t AppInfo::GetEnginePatchVersion()
+    uint32_t GetEnginePatchVersion()
     {
         return 0;
     }
 
-    uint32_t AppInfo::GetEngineMinorVersion()
+    uint32_t GetEngineMinorVersion()
     {
         return 0;
     }
 
-    uint32_t AppInfo::GetEngineMajorVersion()
+    uint32_t GetEngineMajorVersion()
     {
         return 0;
     }

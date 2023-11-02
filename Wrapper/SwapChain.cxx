@@ -3,8 +3,13 @@
 //
 module;
 
-import <memory>;
-import <algorithm>;
+#include <memory>
+#include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 import Window;
 import Surface;
@@ -13,15 +18,13 @@ import SwapChainSupportDetails;
 import LogicalDevice;
 import QueueFamilyIndices;
 
-#include <vulkan/vulkan.h>
-
 export module SwapChain;
 
 export class SwapChain
 {
     std::shared_ptr<LogicalDevice> pLogicalDevice;
 
-    VkSurfaceFormatKHR SwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats)
     {
         for (const auto& availableFormat : availableFormats)
         {
@@ -34,7 +37,7 @@ export class SwapChain
         return availableFormats[0];
     }
 
-    VkPresentModeKHR SwapChain::chooseSwapPresentMode(
+    VkPresentModeKHR chooseSwapPresentMode(
             const std::vector<VkPresentModeKHR>& availablePresentModes)
     {
         for (const auto& availablePresentMode : availablePresentModes)
@@ -48,7 +51,7 @@ export class SwapChain
         return VK_PRESENT_MODE_FIFO_KHR;
     }
 
-    VkExtent2D SwapChain::chooseSwapExtent(std::unique_ptr<Window>& pWindow, const VkSurfaceCapabilitiesKHR& capabilities)
+    VkExtent2D chooseSwapExtent(std::unique_ptr<Window>& pWindow, const VkSurfaceCapabilitiesKHR& capabilities)
     {
         if (std::numeric_limits<uint32_t>::max() != capabilities.currentExtent.width)
         {

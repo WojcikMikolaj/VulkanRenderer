@@ -3,19 +3,23 @@
 //
 module;
 
-import <memory>;
-import <stdexcept>;
+#include <memory>
+#include <stdexcept>
+#include <vector>
+#include <iostream>
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 import AppInfo;
 import ValidationLayers;
-
-#include <vulkan/vulkan.h>
 
 export module Instance;
 
 export class Instance
 {
 private:
-    void Instance::checkExtensions(const char** extensionsToCheck, uint32_t extensionsToCheckCount)
+    void checkExtensions(const char** extensionsToCheck, uint32_t extensionsToCheckCount)
     {
         uint32_t extensionCount = 0;
 
@@ -53,7 +57,7 @@ private:
     }
 
 
-    std::vector<const char*> Instance::getRequiredExtensions(std::unique_ptr<ValidationLayers>& pValidationLayers)
+    std::vector<const char*> getRequiredExtensions(std::unique_ptr<ValidationLayers>& pValidationLayers)
     {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;

@@ -3,9 +3,8 @@
 //
 module;
 
-import <optional>;
-import <vector>;
-
+#include <optional>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 export module QueueFamilyIndices;

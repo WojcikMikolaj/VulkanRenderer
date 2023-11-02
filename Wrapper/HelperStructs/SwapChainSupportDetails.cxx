@@ -3,13 +3,11 @@
 //
 module;
 
-import <vector>;
-import PhysicalDevice;
-import Surface;
-
+#include <vector>
 #include <vulkan/vulkan.h>
 
 export module SwapChainSupportDetails;
+
 
 export class SwapChainSupportDetails
 {

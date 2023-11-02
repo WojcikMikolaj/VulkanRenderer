@@ -3,16 +3,16 @@
 //
 module;
 
+#include <memory>
+#include <vector>
+#include <set>
+#include <stdexcept>
+#include <vulkan/vulkan.h>
 
-import <memory>;
-import <vector>;
-import <set>;
-import <stdexcept>;
 import PhysicalDevice;
 import Surface;
 import QueueFamilyIndices;
-
-#include <vulkan/vulkan.h>
+import ValidationLayers;
 
 export module LogicalDevice;
 

@@ -5,31 +5,25 @@ module;
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-import <iostream>;
-import <memory>;
-import <stdexcept>;
-import <cstdlib>;
-import <fstream>;
-import <optional>;
-import <vector>;
-
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <cstdlib>
+#include <fstream>
+#include <optional>
+#include <vector>
+#include <algorithm>
+#include <map>
+#include <set>
+#include <chrono>
+#include <array>
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-import <algorithm>;
-import <map>;
-import <set>;
-
 #include "../stb/stb_image.h"
 
 import LogicalDevice;
-
-
-import <chrono>;
-import <array>;
 import ValidationLayers;
 import UBO;
 import Vertices;
@@ -38,8 +32,10 @@ import SwapChainSupportDetails;
 import Instance;
 import DebugMessenger;
 import Window;
-import LogicalDevice;
+import PhysicalDevice;
 import SwapChain;
+import AppInfo;
+import Surface;
 
 export module Wrapper;
 
@@ -370,7 +366,7 @@ void Wrapper::updateUniformBuffer(uint32_t uint32)
     auto currentTime = std::chrono::high_resolution_clock::now();
     float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
-    UniformBufferObject_M4_V4_P4 ubo{};
+    UBO_M4_V4_P4 ubo{};
     ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     ubo.proj = glm::perspective(glm::radians(45.0f), pSwapChain->swapChainExtent.width / static_cast<float>(pSwapChain->swapChainExtent.height), 0.1f,
@@ -857,7 +853,7 @@ void Wrapper::createIndexBuffer()
 
 void Wrapper::createUniformBuffers()
 {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject_M4_V4_P4);
+    VkDeviceSize bufferSize = sizeof(UBO_M4_V4_P4);
 
     uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
@@ -916,7 +912,7 @@ void Wrapper::createDescriptorSets()
         VkDescriptorBufferInfo bufferInfo{};
         bufferInfo.buffer = uniformBuffers[i];
         bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject_M4_V4_P4);
+        bufferInfo.range = sizeof(UBO_M4_V4_P4);
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;

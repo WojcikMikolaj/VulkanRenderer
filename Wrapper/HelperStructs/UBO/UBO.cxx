@@ -3,6 +3,8 @@
 //
 module;
 
+#include <glm/glm.hpp>
+
 export module UBO;
 
 export class UBO_M4_V4_P4 {
