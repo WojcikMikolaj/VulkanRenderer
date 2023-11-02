@@ -1,5 +1,5 @@
 //
-// Created by mikow on 02.11.2023.
+// Created by Mikołaj Wójcik on 02.11.2023.
 //
 module;
 

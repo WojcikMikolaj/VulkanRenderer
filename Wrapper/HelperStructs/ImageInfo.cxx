@@ -1,5 +1,5 @@
 //
-// Created by mikow on 02.11.2023.
+// Created by Mikołaj Wójcik on 02.11.2023.
 //
 module;
 
@@ -25,22 +25,14 @@ public:
         this->usageFlags = usageFlags;
     }
 
-    ImageInfo(ImageInfo& other)
+    ImageInfo(ImageInfo& other): ImageInfo(width, height, format, tiling, usageFlags)
     {
-        this->width = other.width;
-        this->height = other.height;
-        this->format = other.format;
-        this->tiling = other.tiling;
-        this->usageFlags = other.usageFlags;
+
     }
 
-    ImageInfo(ImageInfo&& other)
+    ImageInfo(ImageInfo&& other): ImageInfo(width, height, format, tiling, usageFlags)
     {
-        this->width = other.width;
-        this->height = other.height;
-        this->format = other.format;
-        this->tiling = other.tiling;
-        this->usageFlags = other.usageFlags;
+
     }
 
     VkImageCreateInfo GetCreateInfo()
