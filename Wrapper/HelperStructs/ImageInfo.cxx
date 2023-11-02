@@ -15,6 +15,11 @@ public:
     VkImageTiling tiling;
     VkImageUsageFlags usageFlags;
 
+    ImageInfo()
+    {
+
+    }
+
     ImageInfo(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling,
               VkImageUsageFlags usageFlags)
     {
@@ -25,7 +30,7 @@ public:
         this->usageFlags = usageFlags;
     }
 
-    ImageInfo(ImageInfo& other): ImageInfo(width, height, format, tiling, usageFlags)
+    ImageInfo(const ImageInfo& other): ImageInfo(width, height, format, tiling, usageFlags)
     {
 
     }
@@ -53,5 +58,18 @@ public:
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
         return imageInfo;
+    }
+
+    ImageInfo& operator=(const ImageInfo& other)
+    {
+        if(this != &other)
+        {
+            this->width = other.width;
+            this->height = other.height;
+            this->format = other.format;
+            this->tiling = other.tiling;
+            this->usageFlags = other.usageFlags;
+            return *this;
+        }
     }
 };
