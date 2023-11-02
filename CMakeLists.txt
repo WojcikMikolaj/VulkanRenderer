@@ -10,7 +10,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 find_package(Vulkan REQUIRED FATAL_ERROR)
 
 set(PROJECT_SOURCES main.cxx)
-
 add_executable(VulkanRenderer)
 target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
         PUBLIC
@@ -28,7 +27,11 @@ target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
             Wrapper/Surface.cxx
             Wrapper/Window.cxx
             Wrapper/LogicalDevice.cxx
-            Wrapper/SwapChain.cxx)
+            Wrapper/SwapChain.cxx
+            Wrapper/ImageView.cxx
+            Wrapper/Image.cxx
+            Wrapper/HelperStructs/ImageInfo.cxx
+            Wrapper/MemoryHelper.cxx)
 
 include_directories($ENV{VULKAN_SDK}/Include)
 link_directories($ENV{VULKAN_SDK}/Lib;$ENV{VULKAN_SDK}/Bin)
