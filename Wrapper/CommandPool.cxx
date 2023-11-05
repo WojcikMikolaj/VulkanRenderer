@@ -28,9 +28,15 @@ public:
         poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         poolInfo.queueFamilyIndex = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface).graphicsFamily.value();
 
-        if (VK_SUCCESS != vkCreateCommandPool(pLogicalDevice->device, &poolInfo, nullptr, &commandPool))
+        if (VK_SUCCESS != vkCreateCommandPool(this->pLogicalDevice->device, &poolInfo, nullptr, &commandPool))
         {
             throw std::runtime_error("Failed to create command pool!");
         }
+    }
+
+    ~CommandPool()
+    {
+        vkDestroyCommandPool(pLogicalDevice->device, commandPool, nullptr);
+        pLogicalDevice.reset();
     }
 };

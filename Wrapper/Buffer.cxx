@@ -63,7 +63,7 @@ public:
         return vkMapMemory(pLogicalDevice->device, bufferMemory, 0, size, 0, ppData);
     }
 
-    VkResult UnmapMemory()
+    void UnmapMemory()
     {
         vkUnmapMemory(pLogicalDevice->device, bufferMemory);
     }

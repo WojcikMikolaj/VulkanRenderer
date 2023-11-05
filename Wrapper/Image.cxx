@@ -14,13 +14,15 @@ import PhysicalDevice;
 import ImageInfo;
 import MemoryHelper;
 import Buffer;
+import CommandPool;
+import SingleTimeCommandBuffer;
 
 export module Image;
 export class Image
 {
     std::shared_ptr<LogicalDevice> pLogicalDevice;
     std::shared_ptr<PhysicalDevice> pPhysicalDevice;
-    std::unique_ptr<Buffer> pImageBuffer;
+    std::shared_ptr<CommandPool> pCommandPool;
 public:
     VkImage image;
     ImageInfo imageInfo;
@@ -29,10 +31,12 @@ public:
     Image(ImageInfo imageInfo,
           VkMemoryPropertyFlags properties,
           std::shared_ptr<LogicalDevice> pLogicalDevice,
-          std::shared_ptr<PhysicalDevice> pPhysicalDevice): imageInfo(imageInfo)
+          std::shared_ptr<PhysicalDevice> pPhysicalDevice,
+          std::shared_ptr<CommandPool> pCommandPool): imageInfo(imageInfo)
     {
         this->pLogicalDevice = pLogicalDevice;
         this->pPhysicalDevice = pPhysicalDevice;
+        this->pCommandPool = pCommandPool;
         auto createInfo = this->imageInfo.GetCreateInfo();
 
         if (vkCreateImage(pLogicalDevice->device, &createInfo, nullptr, &image) != VK_SUCCESS)
@@ -94,7 +98,7 @@ public:
 
         transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(stagingBuffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        copyBufferToImage(pStagingBuffer->buffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
         transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
@@ -128,12 +132,49 @@ public:
     ~Image()
     {
         vkDestroyImage(pLogicalDevice->device, image, nullptr);
+        vkFreeMemory(pLogicalDevice->device, imageMemory, nullptr);
+        pLogicalDevice.reset();
+        pPhysicalDevice.reset();
+        pCommandPool.reset();
+    }
+
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+    {
+        auto commandBuffer = SingleTimeCommandBuffer(pCommandPool, pLogicalDevice);
+
+        VkBufferImageCopy region{};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = 1;
+
+        region.imageOffset = {0, 0, 0};
+        region.imageExtent = {
+                width,
+                height,
+                1
+        };
+
+        vkCmdCopyBufferToImage(
+                commandBuffer.commandBuffer,
+                buffer,
+                image,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                1,
+                &region
+        );
+
+        commandBuffer.EndAndSubmitBuffer();
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout,
                                         VkImageLayout newLayout)
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        auto commandBuffer =SingleTimeCommandBuffer(pCommandPool, pLogicalDevice);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -175,7 +216,7 @@ public:
         }
 
         vkCmdPipelineBarrier(
-                commandBuffer,
+                commandBuffer.commandBuffer,
                 sourceStage, destinationStage,
                 0,
                 0, nullptr,
@@ -183,6 +224,6 @@ public:
                 1, &barrier
         );
 
-        endSingleTimeCommands(commandBuffer);
+        commandBuffer.EndAndSubmitBuffer();
     }
 };

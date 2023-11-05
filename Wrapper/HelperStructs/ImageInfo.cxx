@@ -69,7 +69,7 @@ public:
             this->format = other.format;
             this->tiling = other.tiling;
             this->usageFlags = other.usageFlags;
-            return *this;
         }
+        return *this;
     }
 };

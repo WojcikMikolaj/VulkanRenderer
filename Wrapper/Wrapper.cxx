@@ -41,6 +41,7 @@ import Image;
 import ImageView;
 import ImageInfo;
 import CommandPool;
+import SingleTimeCommandBuffer;
 
 export module Wrapper;
 
@@ -124,7 +125,6 @@ private:
     std::vector<VkDescriptorSet> descriptorSets;
 
     std::shared_ptr<Image> textureImage;
-    VkDeviceMemory textureImageMemory;
 
     VkImageView textureImageView;
     VkSampler textureSampler;
@@ -134,8 +134,6 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void createTextureImage();
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
-    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
     void createTextureImageView();
     VkImageView createImageView(VkImage image, VkFormat format);
     void createTextureSampler();
@@ -149,7 +147,6 @@ private:
 
     void cleanup();
 
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 
     void recreateSwapChain();
 
@@ -164,7 +161,6 @@ private:
 
     void createFramebuffers();
 
-    void createCommandPool();
     void createVertexBuffer();
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer,
@@ -177,7 +173,6 @@ private:
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
     void createSyncObjects();
-    VkCommandBuffer beginSingleTimeCommands();
 
     static std::vector<char> readFile(const std::string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
@@ -384,7 +379,6 @@ void Wrapper::cleanup()
     vkDestroyImageView(pLogicalDevice->device, textureImageView, nullptr);
 
     textureImage.reset();
-    vkFreeMemory(pLogicalDevice->device, textureImageMemory, nullptr);
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
@@ -408,7 +402,7 @@ void Wrapper::cleanup()
         vkDestroySemaphore(pLogicalDevice->device, renderFinishedSemaphores[i], nullptr);
         vkDestroySemaphore(pLogicalDevice->device, imageAvailableSemaphores[i], nullptr);
     }
-    vkDestroyCommandPool(pLogicalDevice->device, commandPool, nullptr);
+    pCommandPool.reset();
 
     vkDestroyPipeline(pLogicalDevice->device, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(pLogicalDevice->device, pipelineLayout, nullptr);
@@ -752,15 +746,15 @@ void Wrapper::createVertexBuffer()
 
 void Wrapper::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+    auto commandBuffer = SingleTimeCommandBuffer(pCommandPool, pLogicalDevice);
 
     VkBufferCopy copyRegion{};
     copyRegion.srcOffset = 0; // Optional
     copyRegion.dstOffset = 0; // Optional
     copyRegion.size = size;
-    vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+    vkCmdCopyBuffer(commandBuffer.commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    endSingleTimeCommands(commandBuffer);
+    commandBuffer.EndAndSubmitBuffer();
 }
 
 void Wrapper::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
@@ -911,40 +905,7 @@ void Wrapper::createDescriptorSets()
 
 void Wrapper::createTextureImage()
 {
-
-}
-
-void Wrapper::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
-{
-    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-
-    VkBufferImageCopy region{};
-    region.bufferOffset = 0;
-    region.bufferRowLength = 0;
-    region.bufferImageHeight = 0;
-
-    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    region.imageSubresource.mipLevel = 0;
-    region.imageSubresource.baseArrayLayer = 0;
-    region.imageSubresource.layerCount = 1;
-
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {
-            width,
-            height,
-            1
-    };
-
-    vkCmdCopyBufferToImage(
-            commandBuffer,
-            buffer,
-            image,
-            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-            1,
-            &region
-    );
-
-    endSingleTimeCommands(commandBuffer);
+    textureImage = std::make_shared<Image>("Textures/texture.jpg", pLogicalDevice, pPhysicalDevice);
 }
 
 void Wrapper::createTextureImageView()
@@ -1009,7 +970,7 @@ void Wrapper::createCommandBuffers()
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = commandPool;
+    allocInfo.commandPool = pCommandPool->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers.size());
 
