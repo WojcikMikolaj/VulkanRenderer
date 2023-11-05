@@ -23,20 +23,9 @@ export class Image
     std::shared_ptr<LogicalDevice> pLogicalDevice;
     std::shared_ptr<PhysicalDevice> pPhysicalDevice;
     std::shared_ptr<CommandPool> pCommandPool;
-public:
-    VkImage image;
-    ImageInfo imageInfo;
-    VkDeviceMemory imageMemory;
 
-    Image(ImageInfo imageInfo,
-          VkMemoryPropertyFlags properties,
-          std::shared_ptr<LogicalDevice> pLogicalDevice,
-          std::shared_ptr<PhysicalDevice> pPhysicalDevice,
-          std::shared_ptr<CommandPool> pCommandPool): imageInfo(imageInfo)
+    void CreateImage(VkMemoryPropertyFlags properties)
     {
-        this->pLogicalDevice = pLogicalDevice;
-        this->pPhysicalDevice = pPhysicalDevice;
-        this->pCommandPool = pCommandPool;
         auto createInfo = this->imageInfo.GetCreateInfo();
 
         if (vkCreateImage(pLogicalDevice->device, &createInfo, nullptr, &image) != VK_SUCCESS)
@@ -59,11 +48,18 @@ public:
 
         vkBindImageMemory(pLogicalDevice->device, image, imageMemory, 0);
     }
+public:
+    VkImage image;
+    ImageInfo imageInfo;
+    VkDeviceMemory imageMemory;
 
-    Image(std::string pathToImage, std::shared_ptr<LogicalDevice> pLogicalDevice, std::shared_ptr<PhysicalDevice> pPhysicalDevice)
+
+
+    Image(std::string pathToImage, std::shared_ptr<LogicalDevice> pLogicalDevice, std::shared_ptr<PhysicalDevice> pPhysicalDevice, std::shared_ptr<CommandPool> pCommandPool)
     {
         this->pLogicalDevice = pLogicalDevice;
         this->pPhysicalDevice = pPhysicalDevice;
+        this->pCommandPool = pCommandPool;
         auto properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
         int texWidth, texHeight, texChannels;
@@ -76,16 +72,16 @@ public:
         }
 
 
-        std::unique_ptr<Buffer> pStagingBuffer = std::make_unique<Buffer>(Buffer::CreateBuffer(imageSize,
+        auto stagingBuffer = Buffer(imageSize,
                                            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
                                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                                            pLogicalDevice,
-                                           pPhysicalDevice));
+                                           pPhysicalDevice);
 
         void* data;
-        pStagingBuffer->MapMemory(imageSize, 0, &data);
+        stagingBuffer.MapMemory(imageSize, 0, &data);
         memcpy(data, pixels, static_cast<size_t>(imageSize));
-        pStagingBuffer->UnmapMemory();
+        stagingBuffer.UnmapMemory();
 
         stbi_image_free(pixels);
 
@@ -94,39 +90,15 @@ public:
                               VK_FORMAT_R8G8B8A8_SRGB,
                               VK_IMAGE_TILING_OPTIMAL,
                               VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+        CreateImage(properties);
 
-
-        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
+        transitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED,
                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-        copyBufferToImage(pStagingBuffer->buffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        copyBufferToImage(stagingBuffer.buffer, image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
 
-        transitionImageLayout(image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        transitionImageLayout(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-        pStagingBuffer.reset();
-
-
-        auto createInfo = this->imageInfo.GetCreateInfo();
-
-        if (vkCreateImage(pLogicalDevice->device, &createInfo, nullptr, &image) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create image!");
-        }
-
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(pLogicalDevice->device, image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = MemoryHelper::findMemoryType(memRequirements.memoryTypeBits, properties, this->pPhysicalDevice);
-
-        if (vkAllocateMemory(pLogicalDevice->device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to allocate image memory!");
-        }
-
-        vkBindImageMemory(pLogicalDevice->device, image, imageMemory, 0);
     }
 
     ~Image()
@@ -171,7 +143,7 @@ public:
         commandBuffer.EndAndSubmitBuffer();
     }
 
-    void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout,
+    void transitionImageLayout(VkFormat format, VkImageLayout oldLayout,
                                         VkImageLayout newLayout)
     {
         auto commandBuffer =SingleTimeCommandBuffer(pCommandPool, pLogicalDevice);

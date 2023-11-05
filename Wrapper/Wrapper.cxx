@@ -905,7 +905,7 @@ void Wrapper::createDescriptorSets()
 
 void Wrapper::createTextureImage()
 {
-    textureImage = std::make_shared<Image>("Textures/texture.jpg", pLogicalDevice, pPhysicalDevice);
+    textureImage = std::make_shared<Image>("Textures/texture.jpg", pLogicalDevice, pPhysicalDevice, pCommandPool);
 }
 
 void Wrapper::createTextureImageView()
