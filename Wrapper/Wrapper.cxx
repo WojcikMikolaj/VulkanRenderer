@@ -40,6 +40,7 @@ import MemoryHelper;
 import Image;
 import ImageView;
 import ImageInfo;
+import CommandPool;
 
 export module Wrapper;
 
@@ -104,7 +105,7 @@ private:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
     std::vector<VkFramebuffer> swapChainFramebuffers;
-    VkCommandPool commandPool;
+    std::shared_ptr<CommandPool> pCommandPool;
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
@@ -260,7 +261,10 @@ void Wrapper::initVulkan()
     createDescriptorSetLayout();
     createGraphicsPipeline();
     createFramebuffers();
-    createCommandPool();
+
+    //createCommandPool
+    pCommandPool = std::make_shared<CommandPool>(pLogicalDevice, pPhysicalDevice, pSurface);
+
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -718,21 +722,6 @@ void Wrapper::createFramebuffers()
     }
 }
 
-void Wrapper::createCommandPool()
-{
-    QueueFamilyIndices queueFamilyIndices = QueueFamilyIndices::findQueueFamilies(pPhysicalDevice->physicalDevice, pSurface->surface);
-
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-    if (VK_SUCCESS != vkCreateCommandPool(pLogicalDevice->device, &poolInfo, nullptr, &commandPool))
-    {
-        throw std::runtime_error("Failed to create command pool!");
-    }
-}
-
 void Wrapper::createVertexBuffer()
 {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
@@ -1113,38 +1102,4 @@ void Wrapper::createSyncObjects()
     }
 }
 
-VkCommandBuffer Wrapper::beginSingleTimeCommands()
-{
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandPool = commandPool;
-    allocInfo.commandBufferCount = 1;
-
-    VkCommandBuffer commandBuffer;
-    vkAllocateCommandBuffers(pLogicalDevice->device, &allocInfo, &commandBuffer);
-
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-    vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-    return commandBuffer;
-}
-
-void Wrapper::endSingleTimeCommands(VkCommandBuffer commandBuffer)
-{
-    vkEndCommandBuffer(commandBuffer);
-
-    VkSubmitInfo submitInfo{};
-    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
-
-    vkQueueSubmit(pLogicalDevice->graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-    vkQueueWaitIdle(pLogicalDevice->graphicsQueue);
-
-    vkFreeCommandBuffers(pLogicalDevice->device, commandPool, 1, &commandBuffer);
-}
 

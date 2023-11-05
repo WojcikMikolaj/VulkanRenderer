@@ -11,7 +11,8 @@ find_package(Vulkan REQUIRED FATAL_ERROR)
 
 set(PROJECT_SOURCES main.cxx)
 add_executable(VulkanRenderer
-        )
+        Wrapper/CommandPool.cxx
+)
 target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
         PUBLIC
         FILE_SET CXX_MODULES FILES
