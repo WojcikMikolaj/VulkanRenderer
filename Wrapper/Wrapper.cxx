@@ -101,7 +101,7 @@ private:
 
     std::shared_ptr<SwapChain> pSwapChain;
 
-    std::vector<VkImageView> swapChainImageViews;
+    std::vector<std::shared_ptr<ImageView>> swapChainImageViews;
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
@@ -125,16 +125,15 @@ private:
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
-    std::shared_ptr<Image> textureImage;
+    std::shared_ptr<Image> pTextureImage;
 
-    VkImageView textureImageView;
-    std::shared_ptr<Sampler> textureSampler;
+    std::shared_ptr<ImageView> pTextureImageView;
+    std::shared_ptr<Sampler> pTextureSampler;
 
     void initWindow();
 
     void createDescriptorPool();
     void createDescriptorSets();
-    VkImageView createImageView(VkImage image, VkFormat format);
     void initVulkan();
 
     void mainLoop();
@@ -259,12 +258,12 @@ void Wrapper::initVulkan()
     pCommandPool = std::make_shared<CommandPool>(pLogicalDevice, pPhysicalDevice, pSurface);
 
     //createTextureImage
-    textureImage = std::make_shared<Image>("Textures/texture.jpg", pLogicalDevice, pPhysicalDevice, pCommandPool);
+    pTextureImage = std::make_shared<Image>("Textures/texture.jpg", pLogicalDevice, pPhysicalDevice, pCommandPool);
     //createTextureImageView
-    textureImageView = createImageView(textureImage->image, VK_FORMAT_R8G8B8A8_SRGB);
+    pTextureImageView = std::make_shared<ImageView>(pLogicalDevice, pTextureImage->image, VK_FORMAT_R8G8B8A8_SRGB);
 
     //createTextureSampler
-    textureSampler = std::make_shared<Sampler>(pPhysicalDevice, pLogicalDevice);
+    pTextureSampler = std::make_shared<Sampler>(pPhysicalDevice, pLogicalDevice);
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -377,10 +376,10 @@ void Wrapper::cleanup()
 {
     cleanupSwapChain();
 
-    textureSampler.reset();
-    vkDestroyImageView(pLogicalDevice->device, textureImageView, nullptr);
+    pTextureSampler.reset();
+    pTextureImageView.reset();
 
-    textureImage.reset();
+    pTextureImage.reset();
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
@@ -452,9 +451,9 @@ void Wrapper::cleanupSwapChain()
         vkDestroyFramebuffer(pLogicalDevice->device, framebuffer, nullptr);
     }
 
-    for (auto imageView : swapChainImageViews)
+    for (auto pImageView : swapChainImageViews)
     {
-        vkDestroyImageView(pLogicalDevice->device, imageView, nullptr);
+        pImageView.reset();
     }
 
     pSwapChain.reset();
@@ -466,7 +465,7 @@ void Wrapper::createImageViews()
 
     for (uint32_t i = 0; i < pSwapChain->swapChainImages.size(); i++)
     {
-        swapChainImageViews[i] = createImageView((pSwapChain->swapChainImages)[i], pSwapChain->swapChainImageFormat);
+        swapChainImageViews[i] = std::make_shared<ImageView>(pLogicalDevice, (pSwapChain->swapChainImages)[i], pSwapChain->swapChainImageFormat);
     }
 }
 
@@ -699,7 +698,7 @@ void Wrapper::createFramebuffers()
     for (size_t i = 0; i < swapChainImageViews.size(); i++)
     {
         VkImageView attachments[] = {
-                swapChainImageViews[i]
+                swapChainImageViews[i]->imageView
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -880,8 +879,8 @@ void Wrapper::createDescriptorSets()
 
         VkDescriptorImageInfo imageInfo{};
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        imageInfo.imageView = textureImageView;
-        imageInfo.sampler = textureSampler->sampler;
+        imageInfo.imageView = pTextureImageView->imageView;
+        imageInfo.sampler = pTextureSampler->sampler;
 
         std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
@@ -903,28 +902,6 @@ void Wrapper::createDescriptorSets()
 
         vkUpdateDescriptorSets(pLogicalDevice->device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
-}
-
-VkImageView Wrapper::createImageView(VkImage image, VkFormat format)
-{
-    VkImageViewCreateInfo viewInfo{};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = image;
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = format;
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-
-    VkImageView imageView;
-    if (vkCreateImageView(pLogicalDevice->device, &viewInfo, nullptr, &imageView) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create texture image view!");
-    }
-
-    return imageView;
 }
 
 void Wrapper::createCommandBuffers()
