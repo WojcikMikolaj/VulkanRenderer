@@ -143,4 +143,10 @@ public:
         pInstance.reset();
     }
 
+    VkPhysicalDeviceProperties GetProperties()
+    {
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(physicalDevice, &properties);
+        return properties;
+    }
 };

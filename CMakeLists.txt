@@ -35,7 +35,8 @@ target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
             Wrapper/Buffer.cxx
             Wrapper/CommandBuffers/CommandBuffer.cxx
             Wrapper/CommandPool.cxx
-            Wrapper/CommandBuffers/SingleTimeCommandBuffer.cxx)
+            Wrapper/CommandBuffers/SingleTimeCommandBuffer.cxx
+            Wrapper/Sampler.cxx )
 
 include_directories($ENV{VULKAN_SDK}/Include)
 link_directories($ENV{VULKAN_SDK}/Lib;$ENV{VULKAN_SDK}/Bin)
