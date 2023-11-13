@@ -451,9 +451,9 @@ void Wrapper::cleanupSwapChain()
         vkDestroyFramebuffer(pLogicalDevice->device, framebuffer, nullptr);
     }
 
-    for (auto pImageView : swapChainImageViews)
+    for (int i=0; i<swapChainImageViews.size(); i++)
     {
-        pImageView.reset();
+        swapChainImageViews[i].reset();
     }
 
     pSwapChain.reset();
