@@ -14,29 +14,36 @@ add_executable(VulkanRenderer)
 target_sources(VulkanRenderer PRIVATE ${PROJECT_SOURCES}
         PUBLIC
         FILE_SET CXX_MODULES FILES
-            Wrapper/Debug/DebugMessenger.cxx
-            Wrapper/Wrapper.cxx
-            Wrapper/HelperStructs/QueueFamilyIndices.cxx
-            Wrapper/HelperStructs/SwapChainSupportDetails.cxx
-            Wrapper/HelperStructs/VertexStructs/Vertices.cxx
-            Wrapper/HelperStructs/UBO/UBO.cxx
-            Wrapper/Debug/ValidationLayers.cxx
-            Wrapper/Instance.cxx
-            Wrapper/AppInfo.cxx
-            Wrapper/PhysicalDevice.cxx
-            Wrapper/Surface.cxx
-            Wrapper/Window.cxx
-            Wrapper/LogicalDevice.cxx
-            Wrapper/SwapChain.cxx
-            Wrapper/ImageView.cxx
-            Wrapper/Image.cxx
-            Wrapper/HelperStructs/ImageInfo.cxx
-            Wrapper/MemoryHelper.cxx
-            Wrapper/Buffer.cxx
-            Wrapper/CommandBuffers/CommandBuffer.cxx
-            Wrapper/CommandPool.cxx
-            Wrapper/CommandBuffers/SingleTimeCommandBuffer.cxx
-            Wrapper/Sampler.cxx )
+        Engine/Debug/DebugMessenger.cxx
+        Engine/Engine.cxx
+        Engine/HelperStructs/QueueFamilyIndices.cxx
+        Engine/HelperStructs/SwapChainSupportDetails.cxx
+        Engine/HelperStructs/VertexStructs/Vertices.cxx
+        Engine/HelperStructs/UBO/UBO.cxx
+        Engine/Debug/ValidationLayers.cxx
+        Engine/Instance.cxx
+        Engine/AppInfo.cxx
+        Engine/PhysicalDevice.cxx
+        Engine/Surface.cxx
+        Engine/Window.cxx
+        Engine/LogicalDevice.cxx
+        Engine/SwapChain.cxx
+        Engine/ImageView.cxx
+        Engine/Image.cxx
+        Engine/HelperStructs/ImageInfo.cxx
+        Engine/MemoryHelper.cxx
+        Engine/Buffer.cxx
+        Engine/CommandBuffers/CommandBuffer.cxx
+        Engine/CommandPool.cxx
+        Engine/CommandBuffers/SingleTimeCommandBuffer.cxx
+        Engine/Sampler.cxx)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/vert.spv
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/frag.spv
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders/)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Textures/texture.jpg
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Textures/)
 
 include_directories($ENV{VULKAN_SDK}/Include)
 link_directories($ENV{VULKAN_SDK}/Lib;$ENV{VULKAN_SDK}/Bin)

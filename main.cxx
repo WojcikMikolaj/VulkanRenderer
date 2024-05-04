@@ -1,11 +1,11 @@
 #include <stdexcept>
 #include <iostream>
 
-import Wrapper;
+import Engine;
 
 int main()
 {
-    Wrapper app;
+    Engine app;
 
     try
     {

@@ -7,6 +7,7 @@ module;
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <utility>
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -17,6 +18,7 @@ import PhysicalDevice;
 import SwapChainSupportDetails;
 import LogicalDevice;
 import QueueFamilyIndices;
+import ImageView;
 
 export module SwapChain;
 
@@ -79,6 +81,7 @@ export class SwapChain
 public:
     VkSwapchainKHR swapChain;
     std::vector<VkImage> swapChainImages;
+    std::vector<std::unique_ptr<ImageView>> swapChainPImagesViews;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
 
@@ -144,6 +147,11 @@ public:
 
         swapChainImageFormat = surfaceFormat.format;
         swapChainExtent = extent;
+
+        for (uint32_t i = 0; i < swapChainImages.size(); i++)
+        {
+            swapChainPImagesViews.push_back(std::move(std::make_unique<ImageView>(pLogicalDevice, swapChainImages[i], swapChainImageFormat)));
+        }
     }
 
     ~SwapChain()

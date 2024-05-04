@@ -17,7 +17,7 @@ public:
     AppInfo(std::string AppName, std::string EngineName)
     {
         this->AppName = std::string(AppName);
-        this->EngineName = std::string(AppName);
+        this->EngineName = std::string(EngineName);
     }
 
     const char* GetAppName()

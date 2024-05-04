@@ -44,7 +44,7 @@ import CommandPool;
 import SingleTimeCommandBuffer;
 import Sampler;
 
-export module Wrapper;
+export module Engine;
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -73,7 +73,7 @@ const std::vector<uint16_t> indices = {
         0, 1, 2, 2, 3, 0
 };
 
-export class Wrapper
+export class Engine
 {
 public:
     void run() {
@@ -101,7 +101,6 @@ private:
 
     std::shared_ptr<SwapChain> pSwapChain;
 
-    std::vector<std::shared_ptr<ImageView>> swapChainImageViews;
     VkRenderPass renderPass;
     VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
@@ -210,11 +209,11 @@ module: private;
 
 static void framebufferResizeCallback(GLFWwindow* window, int width, int height)
 {
-    auto app = reinterpret_cast<Wrapper*>(glfwGetWindowUserPointer(window));
+    auto app = reinterpret_cast<Engine*>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
 }
 
-void Wrapper::initWindow()
+void Engine::initWindow()
 {
     glfwInit();
 
@@ -226,7 +225,7 @@ void Wrapper::initWindow()
     glfwSetFramebufferSizeCallback(pWindow->window, framebufferResizeCallback);
 }
 
-void Wrapper::initVulkan()
+void Engine::initVulkan()
 {
     //createInstance
     pValidationLayers = std::make_unique<ValidationLayers>(enableValidationLayers);
@@ -248,7 +247,7 @@ void Wrapper::initVulkan()
     //createSwapChain
     pSwapChain = std::make_unique<SwapChain>(pPhysicalDevice, pSurface, pLogicalDevice, pWindow);
 
-    createImageViews();
+   // createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
     createGraphicsPipeline();
@@ -273,7 +272,7 @@ void Wrapper::initVulkan()
     createSyncObjects();
 }
 
-void Wrapper::mainLoop()
+void Engine::mainLoop()
 {
     while (!glfwWindowShouldClose(pWindow->window))
     {
@@ -284,7 +283,7 @@ void Wrapper::mainLoop()
     vkDeviceWaitIdle(pLogicalDevice->device);
 }
 
-void Wrapper::drawFrame()
+void Engine::drawFrame()
 {
     vkWaitForFences(pLogicalDevice->device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -354,7 +353,7 @@ void Wrapper::drawFrame()
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-void Wrapper::updateUniformBuffer(uint32_t uint32)
+void Engine::updateUniformBuffer(uint32_t uint32)
 {
     static auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -372,7 +371,7 @@ void Wrapper::updateUniformBuffer(uint32_t uint32)
     memcpy(uniformBuffersMapped[currentFrame], &ubo, sizeof(ubo));
 }
 
-void Wrapper::cleanup()
+void Engine::cleanup()
 {
     cleanupSwapChain();
 
@@ -424,7 +423,7 @@ void Wrapper::cleanup()
     glfwTerminate();
 }
 
-void Wrapper::recreateSwapChain()
+void Engine::recreateSwapChain()
 {
     int width = 0, height = 0;
     glfwGetFramebufferSize(pWindow->window, &width, &height);
@@ -440,36 +439,26 @@ void Wrapper::recreateSwapChain()
 
 
     pSwapChain = std::make_shared<SwapChain>(pPhysicalDevice, pSurface, pLogicalDevice, pWindow);
-    createImageViews();
+    //createImageViews();
     createFramebuffers();
 }
 
-void Wrapper::cleanupSwapChain()
+void Engine::cleanupSwapChain()
 {
     for (auto framebuffer : swapChainFramebuffers)
     {
         vkDestroyFramebuffer(pLogicalDevice->device, framebuffer, nullptr);
     }
 
-    for (int i=0; i<swapChainImageViews.size(); i++)
+    for (int i=0; i<pSwapChain->swapChainPImagesViews.size(); i++)
     {
-        swapChainImageViews[i].reset();
+        pSwapChain->swapChainPImagesViews[i].reset();
     }
 
     pSwapChain.reset();
 }
 
-void Wrapper::createImageViews()
-{
-    swapChainImageViews.resize(pSwapChain->swapChainImages.size());
-
-    for (uint32_t i = 0; i < pSwapChain->swapChainImages.size(); i++)
-    {
-        swapChainImageViews[i] = std::make_shared<ImageView>(pLogicalDevice, (pSwapChain->swapChainImages)[i], pSwapChain->swapChainImageFormat);
-    }
-}
-
-void Wrapper::createRenderPass()
+void Engine::createRenderPass()
 {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = pSwapChain->swapChainImageFormat;
@@ -513,7 +502,7 @@ void Wrapper::createRenderPass()
     }
 }
 
-void Wrapper::createDescriptorSetLayout()
+void Engine::createDescriptorSetLayout()
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -541,7 +530,7 @@ void Wrapper::createDescriptorSetLayout()
     }
 }
 
-void Wrapper::createGraphicsPipeline()
+void Engine::createGraphicsPipeline()
 {
     auto vertShaderCode = readFile("Shaders/vert.spv");
     auto fragShaderCode = readFile("Shaders/frag.spv");
@@ -692,13 +681,13 @@ void Wrapper::createGraphicsPipeline()
     vkDestroyShaderModule(pLogicalDevice->device, vertShaderModule, nullptr);
 }
 
-void Wrapper::createFramebuffers()
+void Engine::createFramebuffers()
 {
-    swapChainFramebuffers.resize(swapChainImageViews.size());
-    for (size_t i = 0; i < swapChainImageViews.size(); i++)
+    swapChainFramebuffers.resize(pSwapChain->swapChainPImagesViews.size());
+    for (size_t i = 0; i < pSwapChain->swapChainPImagesViews.size(); i++)
     {
         VkImageView attachments[] = {
-                swapChainImageViews[i]->imageView
+                pSwapChain->swapChainPImagesViews[i]->imageView
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -717,7 +706,7 @@ void Wrapper::createFramebuffers()
     }
 }
 
-void Wrapper::createVertexBuffer()
+void Engine::createVertexBuffer()
 {
     VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
@@ -745,7 +734,7 @@ void Wrapper::createVertexBuffer()
     vkFreeMemory(pLogicalDevice->device, stagingBufferMemory, nullptr);
 }
 
-void Wrapper::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+void Engine::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
     auto commandBuffer = SingleTimeCommandBuffer(pCommandPool, pLogicalDevice);
 
@@ -758,9 +747,9 @@ void Wrapper::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize si
     commandBuffer.EndAndSubmitBuffer();
 }
 
-void Wrapper::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
-                           VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                           VkDeviceMemory& bufferMemory)
+void Engine::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                          VkMemoryPropertyFlags properties, VkBuffer& buffer,
+                          VkDeviceMemory& bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -789,7 +778,7 @@ void Wrapper::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
     vkBindBufferMemory(pLogicalDevice->device, buffer, bufferMemory, 0);
 }
 
-void Wrapper::createIndexBuffer()
+void Engine::createIndexBuffer()
 {
     VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
@@ -814,7 +803,7 @@ void Wrapper::createIndexBuffer()
 }
 
 
-void Wrapper::createUniformBuffers()
+void Engine::createUniformBuffers()
 {
     VkDeviceSize bufferSize = sizeof(UBO_M4_V4_P4);
 
@@ -833,7 +822,7 @@ void Wrapper::createUniformBuffers()
 }
 
 
-void Wrapper::createDescriptorPool()
+void Engine::createDescriptorPool()
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -855,7 +844,7 @@ void Wrapper::createDescriptorPool()
     }
 }
 
-void Wrapper::createDescriptorSets()
+void Engine::createDescriptorSets()
 {
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -904,7 +893,7 @@ void Wrapper::createDescriptorSets()
     }
 }
 
-void Wrapper::createCommandBuffers()
+void Engine::createCommandBuffers()
 {
     commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     VkCommandBufferAllocateInfo allocInfo{};
@@ -919,7 +908,7 @@ void Wrapper::createCommandBuffers()
     }
 }
 
-void Wrapper::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
+void Engine::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex)
 {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -978,7 +967,7 @@ void Wrapper::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageI
     }
 }
 
-void Wrapper::createSyncObjects()
+void Engine::createSyncObjects()
 {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
