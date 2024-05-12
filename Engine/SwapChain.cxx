@@ -156,6 +156,10 @@ public:
 
     ~SwapChain()
     {
+        for (int i=0; i<swapChainPImagesViews.size(); i++)
+        {
+            swapChainPImagesViews[i].reset();
+        }
         vkDestroySwapchainKHR(pLogicalDevice->device, swapChain, nullptr);
     }
 };

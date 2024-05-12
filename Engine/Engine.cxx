@@ -247,7 +247,6 @@ void Engine::initVulkan()
     //createSwapChain
     pSwapChain = std::make_unique<SwapChain>(pPhysicalDevice, pSurface, pLogicalDevice, pWindow);
 
-   // createImageViews();
     createRenderPass();
     createDescriptorSetLayout();
     createGraphicsPipeline();
@@ -448,11 +447,6 @@ void Engine::cleanupSwapChain()
     for (auto framebuffer : swapChainFramebuffers)
     {
         vkDestroyFramebuffer(pLogicalDevice->device, framebuffer, nullptr);
-    }
-
-    for (int i=0; i<pSwapChain->swapChainPImagesViews.size(); i++)
-    {
-        pSwapChain->swapChainPImagesViews[i].reset();
     }
 
     pSwapChain.reset();
